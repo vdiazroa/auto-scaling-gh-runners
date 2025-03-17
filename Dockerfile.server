@@ -1,0 +1,27 @@
+# Use a lightweight Python image
+FROM python:3.9-slim
+
+# Install dependencies (including ngrok)
+RUN apt-get update && apt-get install -y python3-pip curl jq && \
+    curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null && \
+    echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | tee /etc/apt/sources.list.d/ngrok.list && \
+    apt-get update && apt-get install -y ngrok
+
+# Set working directory
+WORKDIR /app
+
+# Copy necessary files
+COPY ./requirements.txt app.py /app/
+COPY ./services/ /app/services/
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Expose Flask and ngrok API // no really needed but useful for debugging
+EXPOSE 5000 4040
+
+# Copy GitHub Runner Dockerfile for building inside the container
+COPY Dockerfile.gh-runners /app/
+
+# Start Flask & ngrok
+CMD ["sh", "-c", "python ./app.py & ngrok http 5000"]

@@ -1,0 +1,41 @@
+# Use an official Ubuntu base image
+FROM ubuntu:20.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    curl git jq unzip libicu-dev libcurl4-openssl-dev libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user for the runner
+RUN useradd -m -s /bin/bash runner && \
+    mkdir -p /home/runner/actions-runner
+
+# Set working directory
+WORKDIR /home/runner/actions-runner
+
+# Download and install GitHub Actions Runner
+RUN ARCH=$(dpkg --print-architecture) && \
+    if [ "$ARCH" = "amd64" ]; then \
+        curl -o actions-runner-linux.tar.gz -L https://github.com/actions/runner/releases/download/v2.322.0/actions-runner-linux-x64-2.322.0.tar.gz; \
+    elif [ "$ARCH" = "arm64" ]; then \
+        curl -o actions-runner-linux.tar.gz -L https://github.com/actions/runner/releases/download/v2.322.0/actions-runner-linux-arm64-2.322.0.tar.gz; \
+    else \
+        echo "❌ Unsupported architecture: $ARCH" && exit 1; \
+    fi && \
+    tar xzf ./actions-runner-linux.tar.gz && \
+    rm actions-runner-linux.tar.gz
+
+# Copy entry script as root
+COPY gh-runner-entrypoint.sh /home/runner/entrypoint.sh
+
+# ✅ Change permissions while still root
+RUN chmod +x /home/runner/entrypoint.sh && chown runner:runner /home/runner/entrypoint.sh
+
+# ✅ Now switch to the runner user
+USER runner
+
+# Start the runner
+ENTRYPOINT ["/home/runner/entrypoint.sh"]
