@@ -21,7 +21,7 @@ def get_github_repo():
     if github_repo and github_org:   
         raise Exception("Please provide either GITHUB_REPO or GITHUB_ORG, not both")
     
-    github_rel_url = github_repo if github_repo else github_org
+    github_rel_url = f'repos/{github_repo}' if github_repo else f'orgs/{github_org}'
     logger.info(f"Github repo url: {github_rel_url}")
     
     return github_rel_url

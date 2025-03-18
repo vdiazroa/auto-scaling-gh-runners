@@ -24,7 +24,7 @@ class WebhookService:
         headers = {"Authorization": f"token {self.github_token}", "Accept": "application/vnd.github.v3+json"}
         try:
             response = requests.get(f'{self.github_api_url}/hooks', headers=headers).json()
-            if(response["status"] == "404"):
+            if len(response) == 0:
                 return None
             for hook in response:
                 if self.webhook_url_partial in hook["config"]["url"]:
