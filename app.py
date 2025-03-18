@@ -1,46 +1,15 @@
-from dotenv import load_dotenv
+
 from flask import Flask, request, jsonify
 import logging
 import os
 
-from services.email_service import EmailService
-from services.ngrok_service import TunnelService
+from services.tunnel_service import TunnelService
 from services.runner_service import RunnerService
-from services.webhook_service import WebhookService
-
-
-if os.path.exists(".env.local"):
-    load_dotenv(dotenv_path=".env.local")
-else:
-    load_dotenv()
+from config import config
 
 ## Start Services 
-
-email_service = EmailService(
-    smtp_server=os.getenv("SMTP_SERVER"),
-    smtp_port=os.getenv("SMTP_PORT"),
-    smtp_username=os.getenv("SMTP_USERNAME"),
-    smtp_password=os.getenv("SMTP_PASSWORD"),
-    alert_emails=os.getenv("ALERT_EMAILS")
-)
-
-webhookService = WebhookService(
-    email_service=email_service,
-    github_token=os.getenv("GITHUB_TOKEN"),
-    github_repo=os.getenv("GITHUB_REPO"),
-    github_org=os.getenv("GITHUB_ORG")
-)
-
-tunnel_service = TunnelService(webhookService, os.getenv("TUNNEL_SERVICE_URL"))
-
-runner_service = RunnerService(
-    github_token=os.getenv("GITHUB_TOKEN"),
-    github_repo=os.getenv("GITHUB_REPO"),
-    github_org=os.getenv("GITHUB_ORG"),
-    runner_image=os.getenv("RUNNER_IMAGE"), 
-    runner_name_prefix=os.getenv("RUNNER_NAME_PREFIX"), 
-    max_runners=os.getenv("MAX_RUNNERS")
-)
+tunnel_service = TunnelService(config)
+runner_service = RunnerService(config)
 
 logger = logging.getLogger("WebhookServer")
 

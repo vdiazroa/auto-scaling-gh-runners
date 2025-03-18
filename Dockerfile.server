@@ -1,24 +1,28 @@
-# Use a lightweight Python image
-FROM python:3.9-slim
+FROM alpine:3.21
 
 # Install dependencies
-RUN apt-get update && apt-get install -y python3-pip curl jq unzip docker.io
+RUN apk add --no-cache \
+    python3 \
+    py3-pip \
+    docker-cli
 
 # Set working directory
 WORKDIR /app
 
 # Copy necessary files
-COPY ./requirements.txt app.py /app/
+COPY ./requirements.txt app.py config.py /app/
 COPY ./services/ /app/services/
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# ✅ Create a virtual environment & install dependencies
+RUN python3 -m venv /app/venv && \
+    . /app/venv/bin/activate && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Expose Flask and ngrok API // no really needed but useful for debugging
-EXPOSE 5000 4040
+# Expose Flask (optional, useful for debugging)
+EXPOSE 5001
 
 # Copy GitHub Runner Dockerfile for building inside the container
 COPY Dockerfile.gh-runners gh-runner-entrypoint.sh /app/
 
-# Start Flask & ngrok
-CMD ["sh", "-c", "python ./app.py"]
+# ✅ Ensure the virtual environment is always used
+CMD ["sh", "-c", ". /app/venv/bin/activate && python ./app.py"]

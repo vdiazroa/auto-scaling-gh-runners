@@ -1,15 +1,15 @@
 import subprocess
 import logging
 
+from config import Config
 class RunnerService:
     """Handles GitHub self-hosted runner management."""
-    def __init__(self, github_token, github_repo, github_org, runner_image, runner_name_prefix, max_runners):
-        self.runner_image = runner_image or "github-runner:latest"
-        self.runner_name_prefix = runner_name_prefix or "github-runner"
-        self.max_runners = int(max_runners or '10')
-        self.github_token = github_token
-        self.github_repo = github_repo or ''
-        self.github_org = github_org or ''
+    def __init__(self, config : Config):
+        self.runner_image = f'{config.runner_image}:latest'
+        self.runner_name_prefix = config.runner_image
+        self.max_runners = config.max_runners
+        self.github_token = config.github_token
+        self.github_repo = config.github_repo
 
         self.logger = logging.getLogger("RunnerService")
         self.build_runner_image()  # Ensure the runner image exists before starting
@@ -44,12 +44,12 @@ class RunnerService:
             self.logger.info("🚀 Max runners reached. No new runner created.")
             return False
 
-        runner_name = f"{self.runner_name_prefix}-{len(running_runners) + 1}"
+        runner_name = f"{self.runner_name_prefix}-{self.github_repo.replace("/","-")}-{len(running_runners) + 1}"
         self.logger.info(f"🚀 Creating new runner: {runner_name}")
 
         try:
             subprocess.run(
-                f"docker run -d --name {runner_name} -e GITHUB_TOKEN={self.github_token} -e GITHUB_REPO={self.github_repo} -e GITHUB_ORG={self.github_org} {self.runner_image}",
+                f"docker run -d --name {runner_name} -e GITHUB_TOKEN={self.github_token} -e GITHUB_REPO={self.github_repo} {self.runner_image}",
                 shell=True,
                 check=True,
             )

@@ -6,7 +6,7 @@ services:
     env_file:
       - .env.local
     environment:
-      - TUNNEL_SERVICE_URL=http://ngrok-container:4040
+      - TUNNEL_SERVICE_NAME=ngrok-container
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # Allow Flask to manage Docker containers
     ports:
@@ -22,4 +22,4 @@ services:
       - .env.local
     command: http webhook-handler:5001 # Use the service name here
     ports:
-      - 4040:4040 # Expose ngrok API for status checks
+      - 4040:4040

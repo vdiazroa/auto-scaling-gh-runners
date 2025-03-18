@@ -2,14 +2,16 @@ import time
 import requests
 import logging
 
+from config import Config
 from services.webhook_service import WebhookService
 
 class TunnelService:
     """Handles tunnel discovery and GitHub Webhook updates."""
-    def __init__(self, webhookService: WebhookService, tunnel_service_url):
-        self.tunnel_service_url = tunnel_service_url or "http://localhost:4040"
+    def __init__(self, config: Config):
+        self.tunnel_service_url = f'http://{config.tunnel_service_name or "localhost"}:4040'
         self.current_tunnel_url = None
-        self.webhookService = webhookService
+        
+        self.webhookService = WebhookService(config)
         
         # Configure logging
         logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")

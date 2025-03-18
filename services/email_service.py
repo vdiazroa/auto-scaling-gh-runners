@@ -1,17 +1,21 @@
 import smtplib
 import logging
+
+from config import Config
 from email.message import EmailMessage
 
 class EmailService:
     """Handles sending email alerts."""
 
-    def __init__(self, smtp_server, smtp_port, smtp_username, smtp_password, alert_emails):
-        self.smtp_server = smtp_server
-        self.smtp_port = int(smtp_port or "10")
-        self.smtp_username = smtp_username
-        self.smtp_password = smtp_password
-        self.alert_emails = alert_emails
+    def __init__(self, config: Config):
+        self.smtp_server = config.smtp_server
+        self.smtp_port = config.smtp_port
+        self.smtp_username = config.smtp_username
+        self.smtp_password = config.smtp_password
+        self.alert_emails = config.alert_emails
+        self.server: smtplib.SMTP | None = None
         self.logger = logging.getLogger("EmailService")
+
         self.start_server()
     
     def start_server(self):
@@ -26,11 +30,13 @@ class EmailService:
             
         self.logger.info("📧 Email server started")
 
-    def send_email(self, subject, message):
+    def send_email_alert(self, message):
         """Send an email alert."""
+        if not self.server:
+            return
         try:
             msg = EmailMessage()
-            msg["Subject"] = subject
+            msg["Subject"] = "GitHub Webhook & Runner Alert"
             msg["From"] = self.smtp_username
             msg["To"] = self.alert_emails
             msg.set_content(message)
