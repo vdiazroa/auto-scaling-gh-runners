@@ -1,15 +1,9 @@
 #!/bin/bash
 
-# Determine whether to register the runner for an organization or a repository
-if [ -n "$GITHUB_REPO" ]; then
-    # Register as a repository runner
-    REGISTRATION_URL="https://github.com/$GITHUB_REPO"
-    TOKEN_URL="https://api.github.com/repos/$GITHUB_REPO/actions/runners/registration-token"
-else
-    # Register as an organization runner
-    REGISTRATION_URL="https://github.com/$GITHUB_ORG"
-    TOKEN_URL="https://api.github.com/orgs/$GITHUB_ORG/actions/runners/registration-token"
-fi
+REGISTRATION_URL=$(echo "https://github.com/$GITHUB_REPO" | sed -E 's#/orgs##; s#/repos##')
+
+TOKEN_URL="https://api.github.com/$GITHUB_REPO/actions/runners/registration-token"
+
 
 echo "➡️ Fetching GitHub Runner Registration Token from: $TOKEN_URL"
 TOKEN=$(curl -sX POST -H "Authorization: token $GITHUB_TOKEN" \

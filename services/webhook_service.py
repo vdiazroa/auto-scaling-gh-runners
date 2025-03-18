@@ -7,18 +7,11 @@ from services.email_service import EmailService
 class WebhookService:
     def __init__(self, config: Config):
         github_repo = config.github_repo
-        github_org = config.github_org
         self.github_token = config.github_token
         # if using a persistent url for the tunnel server, set it here instead of "ngrok"
         self.tunnel_server = "ngrok"
-        
-        if not github_org and not github_repo:
-            print("Please provide either GITHUB_REPO or GITHUB_ORG env variable")
-        # TODO: if set github_repo and github_org, put it together in the url
-        # if just github_org, use the org url, if just github_repo, use the repo url
-        # same for the runner configuration
-        # ##############################
-        self.github_api_url= f"https://api.github.com/repo/{github_repo}" if github_repo else f"https://api.github.com/orgs/{github_org}"
+
+        self.github_api_url= f"https://api.github.com/{github_repo}"
         self.email_service = EmailService(config)
         self.logger = logging.getLogger("WebhookService")
 

@@ -10,7 +10,6 @@ class RunnerService:
         self.max_runners = config.max_runners
         self.github_token = config.github_token
         self.github_repo = config.github_repo
-        self.github_org = config.github_org
 
         self.logger = logging.getLogger("RunnerService")
         self.build_runner_image()  # Ensure the runner image exists before starting
@@ -45,12 +44,12 @@ class RunnerService:
             self.logger.info("🚀 Max runners reached. No new runner created.")
             return False
 
-        runner_name = f"{self.runner_name_prefix}-{len(running_runners) + 1}"
+        runner_name = f"{self.runner_name_prefix}-{self.github_repo.replace("/","-")}-{len(running_runners) + 1}"
         self.logger.info(f"🚀 Creating new runner: {runner_name}")
 
         try:
             subprocess.run(
-                f"docker run -d --name {runner_name} -e GITHUB_TOKEN={self.github_token} -e GITHUB_REPO={self.github_repo} -e GITHUB_ORG={self.github_org} {self.runner_image}",
+                f"docker run -d --name {runner_name} -e GITHUB_TOKEN={self.github_token} -e GITHUB_REPO={self.github_repo} {self.runner_image}",
                 shell=True,
                 check=True,
             )
