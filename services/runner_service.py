@@ -1,18 +1,26 @@
 import subprocess
 import logging
+import time
 
 from config import Config
 class RunnerService:
     """Handles GitHub self-hosted runner management."""
     def __init__(self, config : Config):
-        self.runner_image = f'{config.runner_image}:latest'
-        self.runner_name_prefix = config.runner_image
-        self.max_runners = config.max_runners
-        self.github_token = config.github_token
         self.github_repo = config.github_repo
-
+        self.github_token = config.github_token
+        
+        self.runner_image = f'{config.runner_image}:latest'
+        self.runner_name_prefix = f'{config.runner_image}-{self.github_repo.replace("/","-")}'
+        self.max_runners = config.max_runners
+        self.min_runners = config.min_runners
         self.logger = logging.getLogger("RunnerService")
         self.build_runner_image()  # Ensure the runner image exists before starting
+        self.generate_min_q_containers()
+        
+    def generate_min_q_containers(self):
+        while(len(self.list_runners()) < self.min_runners):
+            self.create_runner()
+            time.sleep(5)
         
     def image_exists(self):
         """Check if the runner Docker image exists."""
@@ -44,7 +52,7 @@ class RunnerService:
             self.logger.info("🚀 Max runners reached. No new runner created.")
             return False
 
-        runner_name = f"{self.runner_name_prefix}-{self.github_repo.replace("/","-")}-{len(running_runners) + 1}"
+        runner_name = f"{self.runner_name_prefix}-{len(running_runners)}"
         self.logger.info(f"🚀 Creating new runner: {runner_name}")
 
         try:

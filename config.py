@@ -17,9 +17,10 @@ def get_github_repo():
     
     if not github_repo and not github_org:   
         raise Exception("Please provide either GITHUB_REPO, GITHUB_ORG, or both env variable")
-    
-    github_rel_url = f'{github_org}/' if github_org else '/'
+
+    github_rel_url = f'{github_org}/' if github_org else ''
     github_rel_url = f'repos/{github_rel_url}{github_repo}/' if github_repo else f'orgs/{github_rel_url}'
+
     logger.info(f"Github repo url: {github_rel_url}")
     
     return github_rel_url[:-1]
@@ -37,13 +38,13 @@ class Config:
     
     server_port: int = int(os.getenv("SERVER_PORT", "5001"))
     
-    runner_image: str = os.getenv("RUNNER_IMAGE", "github-runner")
-    runner_name_prefix: Optional[str] = os.getenv("RUNNER_NAME_PREFIX")
+    runner_image: str = os.getenv("RUNNER_IMAGE", "gh-runner")
+    min_runners: int = int(os.getenv("MIN_RUNNERS", "1"))
     max_runners: int = int(os.getenv("MAX_RUNNERS", "10"))
     
     ngrok_authtoken: str = os.getenv("NGROK_AUTHTOKEN")
     
     should_create_webhook: bool = os.getenv("CREATE_WEBHOOK_If_NOT_EXIST", "false").lower() == "true"
-    webhook_events: list[str] = [event.strip() for event in os.getenv("WORKFLOW_EVENTS_NEW_WEBHOOK", "workflow_run").split(",")]
+    webhook_events: tuple[str] = tuple(event.strip() for event in os.getenv("WORKFLOW_EVENTS_NEW_WEBHOOK", "workflow_run").split(","))
     
 config = Config() 
