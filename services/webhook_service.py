@@ -19,7 +19,6 @@ class WebhookService:
         self.email_service = EmailService(config)
         self.logger = logging.getLogger("WebhookService")
 
-
     def get_github_webhook_id(self):
         """Find the GitHub webhook ID."""
         headers = {"Authorization": f"token {self.github_token}", "Accept": "application/vnd.github.v3+json"}
@@ -79,8 +78,6 @@ class WebhookService:
             self.logger.error(f"Error creating webhook: {e}")
             self.email_service.send_email_alert(f"❌ Error creating GitHub Webhook: {e}")
         return False
-        
-        
     
     def github_api_url(self):
         return self.github_api_url
