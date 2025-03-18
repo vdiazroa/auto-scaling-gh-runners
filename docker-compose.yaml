@@ -22,4 +22,4 @@ services:
       - .env.local
     command: http webhook-handler:5001 # Use the service name here
     ports:
-      - 4040:4040 # Expose ngrok API for status checks
+      - 4040:4040

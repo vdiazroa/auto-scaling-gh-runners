@@ -1,16 +1,19 @@
 import smtplib
 import logging
+
+from config import Config
 from email.message import EmailMessage
 
 class EmailService:
     """Handles sending email alerts."""
 
-    def __init__(self, smtp_server, smtp_port, smtp_username, smtp_password, alert_emails):
-        self.smtp_server = smtp_server
-        self.smtp_port = int(smtp_port or "10")
-        self.smtp_username = smtp_username
-        self.smtp_password = smtp_password
-        self.alert_emails = alert_emails
+    def __init__(self, config: Config):
+        self.smtp_server = config.smtp_server
+        self.smtp_port = config.smtp_port
+        self.smtp_username = config.smtp_username
+        self.smtp_password = config.smtp_password
+        self.alert_emails = config.alert_emails
+
         self.logger = logging.getLogger("EmailService")
         self.start_server()
     

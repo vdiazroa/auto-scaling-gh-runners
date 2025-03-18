@@ -1,17 +1,20 @@
 import logging
 import requests
 
+from config import Config
 from services.email_service import EmailService
 
 class WebhookService:
-    def __init__(self, email_service: EmailService, github_token, github_repo, github_org):
+    def __init__(self, config: Config):
+        github_repo = config.github_repo
+        github_org = config.github_org
+        self.github_token = config.github_token
+        
         if not github_org and not github_repo:
             print("Please provide either GITHUB_REPO or GITHUB_ORG env variable")
             
-        self.github_api_url= f"https://api.github.com/repo/{self.github_repo}" if github_repo else f"https://api.github.com/orgs/{github_org}"
-        self.github_token = github_token
-        
-        self.email_service = email_service
+        self.github_api_url= f"https://api.github.com/repo/{github_repo}" if github_repo else f"https://api.github.com/orgs/{github_org}"
+        self.email_service = EmailService(config)
         self.logger = logging.getLogger("WebhookService")
 
 
