@@ -9,7 +9,7 @@ from services.email_service import EmailService
 class WebhookService:
     def __init__(self, config: Config):
         self.should_create_webhook = config.should_create_webhook
-        self.workflow_events = config.webhook_events
+        self.webhook_events = list(config.webhook_events)
         github_repo = config.github_repo
         self.github_token = config.github_token
         # if using a persistent url for the tunnel server, set it here instead of "ngrok"
@@ -24,6 +24,8 @@ class WebhookService:
         headers = {"Authorization": f"token {self.github_token}", "Accept": "application/vnd.github.v3+json"}
         try:
             response = requests.get(f'{self.github_api_url}/hooks', headers=headers).json()
+            if len(response) == 0:
+                return None
             for hook in response:
                 if self.webhook_url_partial in hook["config"]["url"]:
                     return hook["id"]
@@ -60,13 +62,11 @@ class WebhookService:
             return False
         headers = {"Authorization": f"token {self.github_token}", "Accept": "application/vnd.github.v3+json"}
         payload = {
-            "name":"web","active":"true","events": self.webhook_events,
+            "name":"web","active":True,"events": self.webhook_events,
             "config": {"url": f"{webhook_url}/webhook", "content_type": "json"}
             }
         try:
-            print(f"{self.github_api_url}/hooks", headers, payload)
             response = requests.post(f"{self.github_api_url}/hooks", headers=headers, json=payload)
-            print("response", response)
             if response.status_code == 201 or response.status_code == 200:
                 self.logger.info("✅ Webhook created")
                 self.email_service.send_email_alert("✅ GitHub Webhook created successfully")
