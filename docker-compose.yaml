@@ -5,6 +5,8 @@ services:
     restart: always
     env_file:
       - .env.local
+    environment:
+      - TUNNEL_SERVICE_URL=http://ngrok-container:4040
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # Allow Flask to manage Docker containers
     ports:

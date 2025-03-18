@@ -31,10 +31,9 @@ webhookService = WebhookService(
     github_org=os.getenv("GITHUB_ORG")
 )
 
-tunnel_service = TunnelService(webhookService)
+tunnel_service = TunnelService(webhookService, os.getenv("TUNNEL_SERVICE_URL"))
 
 runner_service = RunnerService(
-    runner_dockerfile_path=os.getenv("RUNNER_DOCKERFILE_PATH"),
     github_token=os.getenv("GITHUB_TOKEN"),
     github_repo=os.getenv("GITHUB_REPO"),
     github_org=os.getenv("GITHUB_ORG"),
@@ -65,8 +64,8 @@ def webhook():
     logger.info(f"📩 Received GitHub Webhook: {event_type}")
 
     if event_type == "ping":
-        ## for testing
-        runner_service.create_runner()  # Create a runner on startup
+        ## for debugging
+        runner_service.create_runner()
         return jsonify({"message": "Webhook received!"}), 200
     
     if event_type != "workflow_job":

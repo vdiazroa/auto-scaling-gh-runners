@@ -3,11 +3,10 @@ import logging
 
 class RunnerService:
     """Handles GitHub self-hosted runner management."""
-    def __init__(self, runner_dockerfile_path, github_token, github_repo, github_org, runner_image, runner_name_prefix, max_runners):
+    def __init__(self, github_token, github_repo, github_org, runner_image, runner_name_prefix, max_runners):
         self.runner_image = runner_image or "github-runner:latest"
         self.runner_name_prefix = runner_name_prefix or "github-runner"
         self.max_runners = int(max_runners or '10')
-        self.runner_dockerfile_path = runner_dockerfile_path or ''
         self.github_token = github_token
         self.github_repo = github_repo or ''
         self.github_org = github_org or ''
@@ -27,7 +26,7 @@ class RunnerService:
         """Build the GitHub Actions runner image if it does not exist."""
         if not self.image_exists():
             self.logger.info(f"⚙️ Runner image {self.runner_image} not found. Building...")
-            build_cmd = f"docker build -f Dockerfile.gh-runners -t {self.runner_image} {self.runner_dockerfile_path} ."
+            build_cmd = f"docker build -f Dockerfile.gh-runners -t {self.runner_image} ."
             result = subprocess.run(build_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             
             if result.returncode == 0:

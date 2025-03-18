@@ -6,8 +6,8 @@ from services.webhook_service import WebhookService
 
 class TunnelService:
     """Handles tunnel discovery and GitHub Webhook updates."""
-    def __init__(self, webhookService: WebhookService):
-        self.tunnel_service_url = "http://localhost:4040/api/tunnels"
+    def __init__(self, webhookService: WebhookService, tunnel_service_url):
+        self.tunnel_service_url = tunnel_service_url or "http://localhost:4040"
         self.current_tunnel_url = None
         self.webhookService = webhookService
         
@@ -18,7 +18,7 @@ class TunnelService:
     def get_tunnel_url(self):
         """Fetch the current tunnle public URL."""
         try:
-            response = requests.get(self.tunnel_service_url).json()
+            response = requests.get(f'{self.tunnel_service_url}/api/tunnels').json()
             return response["tunnels"][0]["public_url"]
         except Exception as e:
             self.logger.error(f"Error fetching tunnel URL: {e}")
