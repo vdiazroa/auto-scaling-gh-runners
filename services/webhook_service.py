@@ -9,6 +9,8 @@ class WebhookService:
         github_repo = config.github_repo
         github_org = config.github_org
         self.github_token = config.github_token
+        # if using a persistent url for the tunnel server, set it here instead of "ngrok"
+        self.tunnel_server = "ngrok"
         
         if not github_org and not github_repo:
             print("Please provide either GITHUB_REPO or GITHUB_ORG env variable")
@@ -18,18 +20,19 @@ class WebhookService:
         self.logger = logging.getLogger("WebhookService")
 
 
-    def get_github_webhook_id(self, tunnel_server="ngrok"):
+    def get_github_webhook_id(self):
         """Find the GitHub webhook ID."""
         headers = {"Authorization": f"token {self.github_token}", "Accept": "application/vnd.github.v3+json"}
         try:
             response = requests.get(f'{self.github_api_url}/hooks', headers=headers).json()
             for hook in response:
-                if tunnel_server in hook["config"]["url"]:
+                if self.tunnel_server in hook["config"]["url"]:
                     return hook["id"]
         except Exception as e:
             self.logger.error(f"Error fetching GitHub webhook: {e}")
         return None
-
+    
+    ## this is needed with because we are using ngrok free tier, and the url changes every time we restart the server
     def update_github_webhook(self, new_url):
         """Update GitHub Webhook to use the latest server URL."""
         webhook_id = self.get_github_webhook_id()
