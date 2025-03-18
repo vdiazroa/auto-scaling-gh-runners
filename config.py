@@ -15,15 +15,16 @@ def get_github_repo():
     github_repo = os.getenv("GITHUB_REPO")
     github_org = os.getenv("GITHUB_ORG")
     
-    if not github_repo and not github_org:   
-        raise Exception("Please provide either GITHUB_REPO, GITHUB_ORG, or both env variable")
-
-    github_rel_url = f'{github_org}/' if github_org else ''
-    github_rel_url = f'repos/{github_rel_url}{github_repo}/' if github_repo else f'orgs/{github_rel_url}'
-
+    ## needs to be provided github_repo or github_org, but no both
+    if (not github_repo and not github_org):   
+        raise Exception("Please provide either GITHUB_REPO or GITHUB_ORG")
+    if github_repo and github_org:   
+        raise Exception("Please provide either GITHUB_REPO or GITHUB_ORG, not both")
+    
+    github_rel_url = github_repo if github_repo else github_org
     logger.info(f"Github repo url: {github_rel_url}")
     
-    return github_rel_url[:-1]
+    return github_rel_url
     
 @dataclass
 class Config:
