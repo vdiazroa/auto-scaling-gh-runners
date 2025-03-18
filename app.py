@@ -1,29 +1,27 @@
 
 from flask import Flask, request, jsonify
 import logging
-import os
+from threading import Thread
 
-from services.tunnel_service import TunnelService
 from services.runner_service import RunnerService
 from config import config
 
 ## Start Services 
-tunnel_service = TunnelService(config)
 runner_service = RunnerService(config)
+
+def tunnel_url(): None
+
+if config.ngrok_authtoken:
+    from services.tunnel_service import TunnelService
+    tunnel_service = TunnelService(config)
+    Thread(target=tunnel_service.monitor_tunnel).start()  # Monitor tunnel in the background
+    def tunnel_url(): 
+        return tunnel_service.current_tunnel_url
 
 logger = logging.getLogger("WebhookServer")
 
 ## Stat Server
 app = Flask(__name__)
-
-@app.route('/healthcheck', methods=['GET'])
-def healthcheck():
-    """Health check for the server, tunnel, and runner image."""
-    return jsonify({
-        "tunnerl_url": tunnel_service.get_tunnel_url(),
-        "runner_image_exists": runner_service.image_exists(),
-        "running_runners": runner_service.list_runners(),
-    }), 200
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -52,7 +50,13 @@ def webhook():
 
     return jsonify({"message": "Webhook processed"}), 200
 
-if __name__ == '__main__':
-    from threading import Thread
-    Thread(target=tunnel_service.monitor_tunnel).start()  # Monitor ngrok in the background
-    app.run(host="0.0.0.0", port=int(os.getenv("SERVER_PORT", "5001")))
+@app.route('/healthcheck', methods=['GET'])
+def healthcheck():
+    """Health check for the server, tunnel, and runner image."""
+    return jsonify({
+        "tunnel_url": tunnel_url(),
+        "runner_image_exists": runner_service.image_exists(),
+        "running_runners": runner_service.list_runners(),
+    }), 200
+        
+app.run(host="0.0.0.0", port=config.server_port)  # Start the server

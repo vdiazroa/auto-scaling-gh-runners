@@ -1,5 +1,6 @@
 #!/bin/bash
-docker build -f Dockerfile.server -t webhook-ngrok . 
+# Step 1: Build the server Docker image
+docker build -f Dockerfile.server -t github-webhook-server . 
 
 echo "🚀 Starting GitHub Runner Webhook Setup..."
 
@@ -7,25 +8,7 @@ echo "🚀 Starting GitHub Runner Webhook Setup..."
 echo "▶️ Starting services with Docker Compose..."
 docker-compose up -d
 
-# Step 3: Wait for ngrok to be available
-echo "⏳ Waiting for ngrok to be ready..."
-sleep 5
-
-# Step 4: Fetch the ngrok public URL
-NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-
-if [[ -z "$NGROK_URL" || "$NGROK_URL" == "null" ]]; then
-  echo "❌ Failed to retrieve ngrok URL. Make sure ngrok is running."
-  exit 1
-fi
-
-echo "✅ ngrok is running at: $NGROK_URL"
-
-# Step 5: Check the webhook health
-echo "🔍 Checking webhook health..."
-curl -s http://localhost:5000/health | jq
-
-# Step 6: Display logs for debugging
+# Step 3: Display logs for debugging
 echo "📜 Showing last 10 log entries..."
 docker-compose logs --tail=10 webhook-handler
 

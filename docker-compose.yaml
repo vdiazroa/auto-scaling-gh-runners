@@ -1,25 +1,14 @@
 services:
   webhook-handler:
-    image: webhook-ngrok:latest
-    container_name: webhook-handler
+    image: github-webhook-server:latest
     restart: always
     env_file:
       - .env.local
     environment:
-      - TUNNEL_SERVICE_NAME=ngrok-container
+      - SERVER_PORT=5001
+      - NGROK_PORT=4040
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # Allow Flask to manage Docker containers
     ports:
       - 5001:5001
-    depends_on:
-      - ngrok
-
-  ngrok:
-    image: ngrok/ngrok:latest
-    container_name: ngrok-container
-    restart: always
-    env_file:
-      - .env.local
-    command: http webhook-handler:5001 # Use the service name here
-    ports:
       - 4040:4040

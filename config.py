@@ -33,9 +33,8 @@ class Config:
     alert_emails: Optional[str] = os.getenv("ALERT_EMAILS")
     github_token: Optional[str] = os.getenv("GITHUB_TOKEN")
     github_repo: str = get_github_repo()
-    runner_image: str = os.getenv("RUNNER_IMAGE") or "github-runner"
+    server_port: int = int(os.getenv("SERVER_PORT", "5001"))
     runner_name_prefix: Optional[str] = os.getenv("RUNNER_NAME_PREFIX")
-    max_runners: int = int(os.getenv("MAX_RUNNERS") or "10")
-    tunnel_service_name: Optional[str] = os.getenv("TUNNEL_SERVICE_NAME")
+    ngrok_authtoken: str = os.getenv("NGROK_AUTHTOKEN")
     
 config = Config() 
