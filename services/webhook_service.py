@@ -39,11 +39,14 @@ class WebhookService:
                 response = requests.patch(f"{self.github_api_url}/hooks/{webhook_id}", headers=headers, json=payload)
                 if response.status_code == 200:
                     self.logger.info(f"✅ Webhook updated: {new_url}")
+                    self.send_email_alert(f"✅ GitHub Webhook updated successfully: {new_url}")
                     return True
                 else:
                     self.logger.error(f"❌ Failed to update webhook: {response.text}")
+                    self.send_email_alert(f"❌ Failed to update GitHub Webhook: {response.text}")
             except Exception as e:
                 self.logger.error(f"Error updating webhook: {e}")
+                self.send_email_alert(f"❌ Error updating GitHub Webhook: {e}")
         return False
     
     def github_api_url(self):
