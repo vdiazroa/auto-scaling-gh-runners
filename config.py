@@ -21,6 +21,6 @@ class Config:
     runner_image: str = os.getenv("RUNNER_IMAGE") or "github-runner"
     runner_name_prefix: Optional[str] = os.getenv("RUNNER_NAME_PREFIX")
     max_runners: int = int(os.getenv("MAX_RUNNERS") or "10")
-    tunnel_service_url: Optional[str] = os.getenv("TUNNEL_SERVICE_URL")
+    tunnel_service_name: Optional[str] = os.getenv("TUNNEL_SERVICE_NAME")
 
 config = Config()

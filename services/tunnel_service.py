@@ -8,7 +8,7 @@ from services.webhook_service import WebhookService
 class TunnelService:
     """Handles tunnel discovery and GitHub Webhook updates."""
     def __init__(self, config: Config):
-        self.tunnel_service_url = config.tunnel_service_url or "http://localhost:4040"
+        self.tunnel_service_url = f'http://{config.tunnel_service_name or "localhost"}:4040'
         self.current_tunnel_url = None
         
         self.webhookService = WebhookService(config)
