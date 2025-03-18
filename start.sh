@@ -1,5 +1,4 @@
 #!/bin/bash
-echo "test"
 docker build -f Dockerfile.server -t webhook-ngrok . 
 
 echo "🚀 Starting GitHub Runner Webhook Setup..."
@@ -10,7 +9,7 @@ docker-compose up -d
 
 # Step 3: Wait for ngrok to be available
 echo "⏳ Waiting for ngrok to be ready..."
-sleep 10
+sleep 5
 
 # Step 4: Fetch the ngrok public URL
 NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')

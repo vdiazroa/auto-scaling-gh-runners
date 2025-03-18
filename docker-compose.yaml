@@ -5,45 +5,19 @@ services:
     restart: always
     env_file:
       - .env.local
-
-    environment:
-      # GitHub API Credentials
-      - GITHUB_TOKEN=$GITHUB_TOKEN
-      - GITHUB_REPO=$GITHUB_REPO
-      - GITHUB_ORG=$GITHUB_ORG
-
-      # # Email Alert Configurations
-      - SMTP_SERVER=$SMTP_SERVER
-      - SMTP_PORT=$SMTP_PORT
-      - SMTP_USERNAME=$SMTP_USERNAME
-      - SMTP_PASSWORD=$SMTP_PASSWORD
-      - ALERT_EMAILS=$ALERT_EMAILS
-
-      # GitHub Runner Configurations
-      - RUNNER_IMAGE=github-runner:latest
-      - RUNNER_NAME_PREFIX=github-runner
-      - MAX_RUNNERS=10
-      - RUNNER_DOCKERFILE_PATH=/app/github-runner # Path to Dockerfile for runner
-
-      # Flask Configurations
-      - SERVER_PORT=$SERVER_PORT
-
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # Allow Flask to manage Docker containers
     ports:
-      - '$SERVER_PORT:$SERVER_PORT'
+      - 5001:5001
     depends_on:
       - ngrok
 
   ngrok:
     image: ngrok/ngrok:latest
-    container_name: ngrok-tunnel
+    container_name: ngrok-container
     restart: always
     env_file:
       - .env.local
-    command:
-      - 'http webhook-handler:$SERVER_PORT'
-    environment:
-      - NGROK_AUTHTOKEN: 1UWj7ezQ2rM5wZWhaXg62Qe1ZWK_5nvjRxvAxYMGsLeCEpQDx
+    command: http webhook-handler:5001 # Use the service name here
     ports:
       - 4040:4040 # Expose ngrok API for status checks

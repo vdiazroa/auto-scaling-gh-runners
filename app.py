@@ -56,7 +56,7 @@ def healthcheck():
         "runner_image_exists": runner_service.image_exists(),
         "running_runners": runner_service.list_runners(),
     }), 200
-    
+
 @app.route('/webhook', methods=['POST'])
 def webhook():
     """Handles incoming GitHub Webhook events."""
@@ -65,6 +65,8 @@ def webhook():
     logger.info(f"📩 Received GitHub Webhook: {event_type}")
 
     if event_type == "ping":
+        ## for testing
+        runner_service.create_runner()  # Create a runner on startup
         return jsonify({"message": "Webhook received!"}), 200
     
     if event_type != "workflow_job":
@@ -81,7 +83,7 @@ def webhook():
         runner_service.remove_runner(payload["workflow_job"]["runner_name"])
 
     return jsonify({"message": "Webhook processed"}), 200
-    
+
 if __name__ == '__main__':
     from threading import Thread
     Thread(target=tunnel_service.monitor_tunnel).start()  # Monitor ngrok in the background
