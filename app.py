@@ -2,6 +2,7 @@
 from flask import Flask, request, jsonify
 import logging
 from threading import Thread
+from waitress import serve
 
 from services.runner_service import RunnerService
 from config import config
@@ -59,4 +60,4 @@ def healthcheck():
         "running_runners": runner_service.list_runners(),
     }), 200
         
-app.run(host="0.0.0.0", port=config.server_port)  # Start the server
+serve(app, host="0.0.0.0", port=config.server_port)  # Start the server
