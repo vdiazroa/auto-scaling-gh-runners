@@ -1,5 +1,5 @@
-flask
-requests
-dotenv
-pyngrok
-waitress
+dotenv==0.9.9
+Flask==3.1.0
+pyngrok==7.2.3
+requests==2.32.3
+six==1.17.0
