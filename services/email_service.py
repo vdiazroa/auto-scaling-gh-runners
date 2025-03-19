@@ -1,8 +1,12 @@
-import smtplib
-import logging
+"""Email service that is used in the webhook Service
+to notify the user after the webhook has changed"""
 
-from config import Config
+import logging
+import smtplib
+
 from email.message import EmailMessage
+from config import Config
+
 
 class EmailService:
     """Handles sending email alerts."""
@@ -17,7 +21,7 @@ class EmailService:
         self.logger = logging.getLogger("EmailService")
 
         self.start_server()
-    
+
     def start_server(self):
         """Start the email server."""
         if not self.smtp_username or not self.smtp_password or not self.alert_emails:
@@ -27,7 +31,7 @@ class EmailService:
         with smtplib.SMTP(self.smtp_server, self.smtp_port) as self.server:
             self.server.starttls()
             self.server.login(self.smtp_username, self.smtp_password)
-            
+
         self.logger.info("📧 Email server started")
 
     def send_email_alert(self, message):
@@ -42,6 +46,6 @@ class EmailService:
             msg.set_content(message)
             self.server.send_message(msg)
 
-            self.logger.info(f"📧 Email alert sent to {', '.join(self.alert_emails)}: {message}")
-        except Exception as e:
-            self.logger.error(f"⚠️ Failed to send email: {e}")
+            self.logger.info("📧 Email alert sent to %s: %s", ', '.join(self.alert_emails), message)
+        except (smtplib.SMTPException, ConnectionError) as e:
+            self.logger.error("⚠️ Failed to send email: %s", e)
