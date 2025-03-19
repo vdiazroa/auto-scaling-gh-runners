@@ -24,7 +24,7 @@ if config.ngrok_authtoken:
     tunnel_service = TunnelService(config)
     Thread(target=tunnel_service.monitor_tunnel).start()  # Monitor tunnel in the background
 
-    get_tunnel_url = tunnel_service.get_current_tunnel_url()
+    get_tunnel_url = tunnel_service.get_current_tunnel_url
 
 
 logger = logging.getLogger("WebhookServer")
