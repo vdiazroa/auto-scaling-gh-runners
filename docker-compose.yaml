@@ -6,9 +6,7 @@ services:
       - .env.local
     environment:
       - SERVER_PORT=5001
-      - NGROK_PORT=4040
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # Allow Flask to manage Docker containers
     ports:
       - 5001:5001
-      - 4040:4040

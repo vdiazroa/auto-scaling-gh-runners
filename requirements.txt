@@ -1,5 +1,5 @@
 flask
 requests
 dotenv
-ngrok
+pyngrok
 waitress

@@ -11,6 +11,3 @@ docker-compose up -d
 # Step 3: Display logs for debugging
 echo "📜 Showing last 10 log entries..."
 docker-compose logs --tail=10 webhook-handler
-
-echo "🚀 Setup complete! The webhook is live at: $NGROK_URL"
-echo "🔗 Add this URL to GitHub Webhooks: $NGROK_URL/webhook"

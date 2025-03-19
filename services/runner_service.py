@@ -15,9 +15,7 @@ class RunnerService:
         self.github_token = config.github_token
 
         self.runner_image = f"{config.runner_image}:latest"
-        self.runner_name_prefix = (
-            f'{config.runner_image}-{self.github_repo.replace("/","-")}'
-        )
+        self.runner_name_prefix = f'{config.runner_image}-{self.github_repo.replace("/","-")}'
         self.max_runners = config.max_runners
         self.min_runners = config.min_runners
         self.logger = logging.getLogger("RunnerService")
