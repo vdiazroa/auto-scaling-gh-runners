@@ -2,8 +2,6 @@
 
 REGISTRATION_URL=$(echo "https://github.com/$GITHUB_REPO" | sed -E 's#/orgs##; s#/repos##')
 TOKEN_URL="https://api.github.com/$GITHUB_REPO/actions/runners/registration-token"
-
-echo "➡️ Fetching GitHub Runner Registration Token from: $TOKEN_URL"
 TOKEN=$(curl -sX POST -H "Authorization: token $GITHUB_TOKEN" \
               -H "Accept: application/vnd.github.v3+json" \
               "$TOKEN_URL" | jq -r '.token')
