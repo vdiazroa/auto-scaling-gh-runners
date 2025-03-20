@@ -4,37 +4,33 @@ FROM ubuntu:20.04
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install dependencies (including Docker, Buildx, Python, Node.js, Yarn)
-RUN apt-get update && apt-get install -y \
-    curl git jq unzip libicu-dev libcurl4-openssl-dev libssl-dev \
-    ca-certificates gnupg lsb-release \
+# ✅ Update package lists & install required dependencies
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y \
+    curl git jq unzip \
+    libicu-dev libcurl4-openssl-dev libssl-dev \
+    ca-certificates gnupg lsb-release software-properties-common \
     python3 python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
-# ✅ Install Docker CLI & Buildx
-RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
-    echo "deb [arch=$(dpkg --print-architecture)] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+# ✅ Add Docker's official GPG key and repository (fixes missing docker-ce package)
+RUN mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
+    tee /etc/apt/sources.list.d/docker.list > /dev/null && \
     apt-get update && apt-get install -y \
-    docker-ce docker-ce-cli containerd.io docker-buildx-plugin && \
-    rm -rf /var/lib/apt/lists/*
+    docker-ce docker-ce-cli containerd.io docker-buildx-plugin \
+    && rm -rf /var/lib/apt/lists/*
 
-# ✅ Install Node.js & Yarn
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs && \
-    npm install --global yarn
-
-# ✅ Install Yarn PnP (Plug'n'Play)
-RUN yarn set version berry && \
-    yarn config set nodeLinker pnp
-
-# ✅ Add runner user & grant permissions
+# Create a non-root user for the runner
 RUN useradd -m -s /bin/bash runner && \
-    mkdir -p /home/runner/actions-runner && \
-    usermod -aG docker runner && \   # Give runner access to Docker
+    mkdir -p /home/runner/actions-runner
+
+# Give the runner access to Docker & fix permissions
+RUN usermod -aG docker runner && \
     chown -R runner:runner /home/runner && \
-    chown -R runner:runner /usr/local && \   # Fix permissions for npm/yarn global installs
-    chmod -R 775 /usr/local/bin && \
-    chmod -R 775 /usr/local/lib
+    chown -R runner:runner /usr/local && \
+    chmod -R 775 /usr/local/bin
 
 # Set working directory
 WORKDIR /home/runner/actions-runner
@@ -60,9 +56,6 @@ RUN chmod +x /home/runner/entrypoint.sh && chown runner:runner /home/runner/entr
 
 # ✅ Now switch to the runner user
 USER runner
-
-# ✅ Enable Docker Buildx for runner
-RUN docker buildx create --use
 
 # Start the runner
 ENTRYPOINT ["/home/runner/entrypoint.sh"]
