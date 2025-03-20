@@ -21,6 +21,19 @@ class RunnerService:
         self.max_runners = config.max_runners
         self.min_runners = config.min_runners
         self.logger = logging.getLogger("RunnerService")
+        self.build_cmd = [
+            "docker",
+            "build",
+            "-f",
+            "Dockerfile.gh-runners",
+            "--build-arg",
+            f"DOCKER={config.docker}",
+            "--build-arg",
+            f"NODE={config.node}",
+            "-t",
+            self.runner_image,
+            "."
+        ]
 
         # Ensure the runner image exists before starting
         self.build_runner_image()
@@ -28,7 +41,7 @@ class RunnerService:
 
     def generate_min_q_containers(self):
         """Ensure minimum number of GitHub runners exist"""
-        while len(self.list_runners()) < self.min_runners:
+        while self.runners_quantity() < self.min_runners:
             self.create_runner()
             time.sleep(5)
 
@@ -45,8 +58,7 @@ class RunnerService:
         if not self.image_exists():
             self.logger.info("⚙️ Runner image %s not found. Building...", self.runner_image)
             try:
-                subprocess.run(["docker", "build", "-f", "Dockerfile.gh-runners", "-t", self.runner_image, "."], 
-                               check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                subprocess.run(self.build_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 self.logger.info("✅ Runner image %s built successfully.", self.runner_image)
                 return True
             except subprocess.CalledProcessError as e:
@@ -56,17 +68,14 @@ class RunnerService:
 
     def create_runner(self):
         """Create a new GitHub Actions runner container."""
-        running_runners = self.list_runners()
-        if len(running_runners) >= self.max_runners:
+        if self.runners_quantity() >= self.max_runners:
             self.logger.info("🚀 Max runners reached. No new runner created.")
             return False
 
         try:
             # Run the container and get its ID securely
-            container_id = subprocess.check_output(
-                ["docker", "run", "-d", "-e", f"GITHUB_TOKEN={self.github_token}", 
-                 "-e", f"GITHUB_REPO={self.github_repo}", self.runner_image]
-            ).decode().strip()
+            runner_cmd = ["docker","run","-d","-e",f"GITHUB_TOKEN={self.github_token}","-e",f"GITHUB_REPO={self.github_repo}",self.runner_image]
+            container_id = subprocess.check_output(runner_cmd).decode().strip()
 
             # Rename the container using the generated ID
             new_container_name = f"{self.runner_name_prefix}-{container_id[:12]}"
@@ -89,12 +98,12 @@ class RunnerService:
             self.logger.error("❌ Error removing runner: %s", e)
             return False
 
-    def list_runners(self):
+    def runners_quantity(self):
         """List running GitHub runner containers."""
         try:
             output = subprocess.check_output(
                 ["docker", "ps", "--filter", f"name={self.runner_name_prefix}*", "--format", "{{.Names}}"]
             ).decode().strip()
-            return output.split("\n") if output else []
+            return len(output.split("\n")) if output else 0
         except subprocess.CalledProcessError:
-            return []
+            return 0

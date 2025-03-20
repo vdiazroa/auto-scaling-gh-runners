@@ -10,6 +10,8 @@ from waitress import serve
 from config import config
 from services.runner_service import RunnerService
 
+logging.basicConfig(level=logging.INFO)
+
 ## Start Services
 runner_service = RunnerService(config)
 
@@ -68,7 +70,7 @@ def healthcheck():
         jsonify({
                 "tunnel_url": get_tunnel_url(),
                 "runner_image_exists": runner_service.image_exists(),
-                "running_runners": runner_service.list_runners(),
+                "running_runners": runner_service.runners_quantity(),
         }),
         200
     )
