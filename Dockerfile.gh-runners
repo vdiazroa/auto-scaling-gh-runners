@@ -4,23 +4,43 @@ FROM ubuntu:20.04
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install dependencies
+# Install dependencies (including Docker, Buildx, Python, Node.js, Yarn)
 RUN apt-get update && apt-get install -y \
     curl git jq unzip libicu-dev libcurl4-openssl-dev libssl-dev \
+    ca-certificates gnupg lsb-release \
+    python3 python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a non-root user for the runner
+# ✅ Install Docker CLI & Buildx
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
+    echo "deb [arch=$(dpkg --print-architecture)] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && apt-get install -y \
+    docker-ce docker-ce-cli containerd.io docker-buildx-plugin && \
+    rm -rf /var/lib/apt/lists/*
+
+# ✅ Install Node.js & Yarn
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install --global yarn
+
+# ✅ Install Yarn PnP (Plug'n'Play)
+RUN yarn set version berry && \
+    yarn config set nodeLinker pnp
+
+# ✅ Add runner user & grant permissions
 RUN useradd -m -s /bin/bash runner && \
-    mkdir -p /home/runner/actions-runner
+    mkdir -p /home/runner/actions-runner && \
+    usermod -aG docker runner && \   # Give runner access to Docker
+    chown -R runner:runner /home/runner && \
+    chown -R runner:runner /usr/local && \   # Fix permissions for npm/yarn global installs
+    chmod -R 775 /usr/local/bin && \
+    chmod -R 775 /usr/local/lib
 
 # Set working directory
 WORKDIR /home/runner/actions-runner
 
-# Get the latest version of the runner
-# Download and install GitHub Actions Runner
-RUN LATEST=`curl -s -i https://github.com/actions/runner/releases/latest | grep location:` \
-    LATEST=`echo $LATEST | sed 's#.*tag/v##'` \
-    LATEST=`echo $LATEST | sed 's/\r//'` \
+# Get the latest version of GitHub Actions runner
+RUN LATEST=$(curl -sI https://github.com/actions/runner/releases/latest | grep -Fi "location" | sed -E 's#.*/tag/v##' | tr -d '\r') && \
     ARCH=$(dpkg --print-architecture) && \
     if [ "$ARCH" = "amd64" ]; then \
         curl -o actions-runner-linux.tar.gz -L https://github.com/actions/runner/releases/download/v${LATEST}/actions-runner-linux-x64-${LATEST}.tar.gz; \
@@ -40,6 +60,9 @@ RUN chmod +x /home/runner/entrypoint.sh && chown runner:runner /home/runner/entr
 
 # ✅ Now switch to the runner user
 USER runner
+
+# ✅ Enable Docker Buildx for runner
+RUN docker buildx create --use
 
 # Start the runner
 ENTRYPOINT ["/home/runner/entrypoint.sh"]
