@@ -1,5 +1,20 @@
 #!/bin/bash
 
+# Start Docker daemon if DOCKER is enabled
+if [ "$DOCKER" = "true" ]; then
+    echo "🧱 DOCKER=true - Starting Docker daemon..."
+
+    # Ensure Docker group exists
+    if ! getent group docker > /dev/null; then
+        groupadd docker
+    fi
+
+    usermod -aG docker $(whoami)
+
+    # Start Docker daemon
+    dockerd &
+fi
+
 REGISTRATION_URL=$(echo "https://github.com/$GITHUB_REPO" | sed -E 's#/orgs##; s#/repos##')
 TOKEN_URL="https://api.github.com/$GITHUB_REPO/actions/runners/registration-token"
 TOKEN=$(curl -sX POST -H "Authorization: token $GITHUB_TOKEN" \
