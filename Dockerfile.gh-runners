@@ -14,6 +14,7 @@ ENV NODE=$NODE
 RUN apt-get update && apt-get upgrade -y && \
     apt-get install -y curl git jq unzip sudo \
     libicu-dev libcurl4-openssl-dev libssl-dev software-properties-common python3-pip && \
+    ln -s /usr/bin/python3 /usr/bin/python  && \
     rm -rf /var/lib/apt/lists/*
 
 RUN if [ "$DOCKER" = "true" ] || [ "$NODE" = "true" ]; then \

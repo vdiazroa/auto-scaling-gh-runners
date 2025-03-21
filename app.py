@@ -43,11 +43,9 @@ def webhook():
     logger.info("📩 Received GitHub Webhook: %s", event_type)
 
     if event_type == "ping":
-        ## for debugging
-        runner_service.create_runner()
         return jsonify({"message": "Webhook received!"}), 200
 
-    if event_type != "workflow_job":
+    if  event_type not in config.webhook_events:
         return jsonify({"message": "Webhook received! no action needed"}), 200
 
     action = payload.get("action")

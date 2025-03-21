@@ -18,7 +18,7 @@ class WebhookService:
         github_repo = config.github_repo
         self.github_token = config.github_token
         # if using a persistent url for the tunnel server, set it here instead of "ngrok"
-        self.webhook_url_partial = ".ngrok-free.app"
+        self.webhook_url_partial = config.ngrok_url or ".ngrok-free.app"
 
         self.github_api_base_url = f"https://api.github.com/{github_repo}"
         self.email_service = EmailService(config)
