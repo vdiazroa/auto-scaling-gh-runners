@@ -1,18 +1,24 @@
 #!/bin/bash
 
-# Start Docker daemon if DOCKER is enabled
 if [ "$DOCKER" = "true" ]; then
-    echo "🧱 DOCKER=true - Starting Docker daemon..."
-
-    # Ensure Docker group exists
-    if ! getent group docker > /dev/null; then
-        groupadd docker
+    echo "🔧 Setting Docker socket permissions..."
+    SOCKET="/var/run/docker.sock"
+    if [ -S "$SOCKET" ]; then
+        DOCKER_GID=$(stat -c '%g' "$SOCKET")
+        echo "🧩 Detected Docker GID: $DOCKER_GID"
+        # Create docker group with the same GID if it doesn't exist
+        if ! getent group "$DOCKER_GID" > /dev/null; then
+            echo "➕ Creating group with GID $DOCKER_GID"
+            groupadd -g "$DOCKER_GID" docker
+        else
+            echo "✅ Group with GID $DOCKER_GID already exists"
+        fi
+        # Add current user to that group
+        echo "➕ Adding $(whoami) to docker group"
+        usermod -aG docker "$(whoami)"
+    else
+        echo "❌ Docker socket not found at $SOCKET"
     fi
-
-    usermod -aG docker $(whoami)
-
-    # Start Docker daemon
-    dockerd &
 fi
 
 REGISTRATION_URL=$(echo "https://github.com/$GITHUB_REPO" | sed -E 's#/orgs##; s#/repos##')

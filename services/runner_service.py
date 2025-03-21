@@ -21,19 +21,8 @@ class RunnerService:
         self.max_runners = config.max_runners
         self.min_runners = config.min_runners
         self.logger = logging.getLogger("RunnerService")
-        self.build_cmd = [
-            "docker",
-            "build",
-            "-f",
-            "Dockerfile.gh-runners",
-            "--build-arg",
-            f"DOCKER={config.docker}",
-            "--build-arg",
-            f"NODE={config.node}",
-            "-t",
-            self.runner_image,
-            "."
-        ]
+        self.docker = config.docker
+        self.node = config.node
 
         # Ensure the runner image exists before starting
         self.build_runner_image()
@@ -58,7 +47,14 @@ class RunnerService:
         if not self.image_exists():
             self.logger.info("⚙️ Runner image %s not found. Building...", self.runner_image)
             try:
-                subprocess.run(self.build_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                build_cmd = [
+                    "docker","build","-f","Dockerfile.gh-runners",
+                    "--build-arg",f"DOCKER={self.docker}",
+                    "--build-arg",f"NODE={self.node}",
+                    "--build-arg", "DOCKER_GID=$(getent group docker | cut -d: -f3)",
+                    "-t",self.runner_image,"."
+                ]
+                subprocess.run(build_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 self.logger.info("✅ Runner image %s built successfully.", self.runner_image)
                 return True
             except subprocess.CalledProcessError as e:
@@ -74,7 +70,11 @@ class RunnerService:
 
         try:
             # Run the container and get its ID securely
-            runner_cmd = ["docker","run","-d","-e",f"GITHUB_TOKEN={self.github_token}","-e",f"GITHUB_REPO={self.github_repo}",self.runner_image]
+            runner_cmd = [
+                "docker","run","-d","--privileged","-v","/var/run/docker.sock:/var/run/docker.sock",
+                "-e",f"GITHUB_TOKEN={self.github_token}","-e",f"GITHUB_REPO={self.github_repo}",
+                "-e",f"DOCKER={self.docker}",self.runner_image
+            ]
             container_id = subprocess.check_output(runner_cmd).decode().strip()
 
             # Rename the container using the generated ID
