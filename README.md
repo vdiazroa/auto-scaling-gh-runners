@@ -39,7 +39,11 @@ GitHub Webhook -> Flask Web Server -> Runner Service -> Docker Container (GitHub
 
 ## 🚀 Quickstart
 
-Fill in your secrets in .env.local
+Fill in your config in .env.local
+
+```bash
+cp .env.dist .env.local
+```
 
 Option 1,
 it clones the repository, builds the docker image and docker compose up
@@ -47,7 +51,6 @@ it clones the repository, builds the docker image and docker compose up
 ```bash
 git clone https://github.com/vdiazroa/auto-scaling-gh-runners.git
 cd auto-scaling-gh-runners
-cp .env.example .env.local
 ./start.sh
 ```
 
