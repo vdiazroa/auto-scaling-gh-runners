@@ -10,8 +10,9 @@ class TunnelService:
     """Handles tunnel discovery and GitHub Webhook updates."""
     def __init__(self, config: Config):
         self.current_tunnel_url = None
+        self.ngrok_url = config.ngrok_url
         ngrok.set_auth_token(config.ngrok_authtoken)
-        self.listener = ngrok.connect(addr=config.server_port)
+        self.listener = ngrok.connect(addr=config.server_port, hostname=self.ngrok_url)
         self.webhook_service = WebhookService(config)
 
         # Configure logging
@@ -20,6 +21,11 @@ class TunnelService:
 
     def monitor_tunnel(self):
         """Continuously check for tunnel URL changes and update the GitHub Webhook."""
+        if self.ngrok_url:
+            webhook_id = self.webhook_service.get_github_webhook_id()
+            if not webhook_id:
+                return self.webhook_service.create_webhook(self.ngrok_url)
+            return
         time.sleep(10)  # wait for ngrok to start
         while True:
             new_url = self.listener.public_url

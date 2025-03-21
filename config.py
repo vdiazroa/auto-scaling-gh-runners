@@ -51,10 +51,11 @@ class Config:
     runner_image: str = os.getenv("RUNNER_IMAGE", "gh-runner")
     min_runners: int = int(os.getenv("MIN_RUNNERS", "1"))
     max_runners: int = int(os.getenv("MAX_RUNNERS", "10"))
-    docker: str = os.getenv("DOCKER", "true").lower()
+    docker: str = os.getenv("DOCKER", "false").lower()
     node: str = os.getenv("NODE", "true").lower()
 
     ngrok_authtoken: str = os.getenv("NGROK_AUTHTOKEN")
+    ngrok_url: str = os.getenv("NGROK_DOMAIN")
 
     should_create_webhook: bool = (
         os.getenv("CREATE_WEBHOOK_If_NOT_EXIST", "false").lower() == "true"
