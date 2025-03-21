@@ -22,7 +22,7 @@ Auto-scale your GitHub self-hosted runners using Docker, webhooks, and ngrok! Th
 | Docker           | ✅       | Needed to build and run runner containers                           |
 | GitHub Token     | ✅       | Must have repo/workflow scope                                       |
 | Ngrok (optional) | ❌       | Required only if you want automatic tunneling (free tier supported) |
-| Python 3.8+, pip |          | required if you run the server with python main.py                  |
+| Python 3.8+, pip |          | required if you use Option 4                                        |
 
 ---
 
