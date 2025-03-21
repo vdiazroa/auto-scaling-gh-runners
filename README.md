@@ -22,7 +22,7 @@ Auto-scale your GitHub self-hosted runners using Docker, webhooks, and ngrok! Th
 | Docker           | ✅       | Needed to build and run runner containers                           |
 | GitHub Token     | ✅       | Must have repo/workflow scope                                       |
 | Ngrok (optional) | ❌       | Required only if you want automatic tunneling (free tier supported) |
-| Python 3.8+, pip |          | required if you run the server with python main.py                  |
+| Python 3.8+, pip |          | required if you use Option 4                                        |
 
 ---
 
@@ -39,7 +39,11 @@ GitHub Webhook -> Flask Web Server -> Runner Service -> Docker Container (GitHub
 
 ## 🚀 Quickstart
 
-Fill in your secrets in .env.local
+Fill in your config in .env.local
+
+```bash
+cp .env.dist .env.local
+```
 
 Option 1,
 it clones the repository, builds the docker image and docker compose up
@@ -47,7 +51,6 @@ it clones the repository, builds the docker image and docker compose up
 ```bash
 git clone https://github.com/vdiazroa/auto-scaling-gh-runners.git
 cd auto-scaling-gh-runners
-cp .env.example .env.local
 ./start.sh
 ```
 
