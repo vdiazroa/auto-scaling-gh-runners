@@ -51,9 +51,8 @@ class Config:
     runner_image: str = os.getenv("RUNNER_IMAGE", "gh-runner")
     min_runners: int = int(os.getenv("MIN_RUNNERS", "1"))
     max_runners: int = int(os.getenv("MAX_RUNNERS", "10"))
-    docker: str = os.getenv("DOCKER", "False").lower()
-    node: str = os.getenv("NODE", "False").lower()
-    
+    docker: str = os.getenv("DOCKER", "true").lower()
+    node: str = os.getenv("NODE", "true").lower()
 
     ngrok_authtoken: str = os.getenv("NGROK_AUTHTOKEN")
 
