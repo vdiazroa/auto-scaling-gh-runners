@@ -6,15 +6,7 @@ if [ "$DOCKER" = "true" ]; then
     if [ -S "$SOCKET" ]; then
         DOCKER_GID=$(stat -c '%g' "$SOCKET")
         echo "🧩 Detected Docker GID: $DOCKER_GID"
-        # Create docker group with the same GID if it doesn't exist
-        if ! getent group "$DOCKER_GID" > /dev/null; then
-            echo "➕ Creating group with GID $DOCKER_GID"
-            groupadd -g "$DOCKER_GID" docker
-        else
-            echo "✅ Group with GID $DOCKER_GID already exists"
-        fi
-        # Add current user to that group
-        echo "➕ Adding $(whoami) to docker group"
+        getent group "$DOCKER_GID" >/dev/null || groupadd -g "$DOCKER_GID" docker
         usermod -aG docker "$(whoami)"
     else
         echo "❌ Docker socket not found at $SOCKET"

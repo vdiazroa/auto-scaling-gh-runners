@@ -59,7 +59,7 @@ pull image from docker hub, and starts container
 
 ```bash
 docker pull vdiazroa/auto-scaling-gh-runners:latest
-docker run -d -v /var/run/docker.sock:/var/run/docker.sock --env-file ./env.local vdiazroa/auto-scaling-gh-runners:latest
+docker run -d -v /var/run/docker.sock:/var/run/docker.sock --env-file ./.env.local vdiazroa/auto-scaling-gh-runners:latest
 ```
 
 Option 3,
@@ -101,9 +101,9 @@ Create a `.env.local` file with:
 
 GITHUB_TOKEN=ghp_...your_pat...
 
-# ### checks if the GITHUB_REPO exists then it uses the repo, else uses the org
-GITHUB_REPO=your_org_or_user/your_repo
-GITHUB_REPO=your_org
+# ### needs to be at least one of the following provided
+GITHUB_REPO=your_org_or_user/your_repo # or GITHUB_REPO=your_org_or_user/your_repo1, your_org_or_user/your_repo2
+GITHUB_ORG=your_org # or GITHUB_ORG=your_org1, your_org2
 
 ####################################
 # ### OPTIONAL CONFIGURATION ###
