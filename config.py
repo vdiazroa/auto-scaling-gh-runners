@@ -33,6 +33,15 @@ def get_github_repo():
 
     return [repo.strip() for repo in all_repos]
 
+def get_webhook_events():
+    '''Get and format events from env'''
+    allowed_events = ["workflow_run"]
+    events = [event.strip() for event in os.getenv("WORKFLOW_EVENTS_NEW_WEBHOOK", "workflow_run").split(",")]
+
+    if any(event not in allowed_events for event in events):
+        raise ValueError('Events needs to be any of {allowed_events.join(", ")}')
+    return events
+
 
 @dataclass
 class Config:
@@ -45,13 +54,8 @@ class Config:
     ngrok_url: Optional[str] = os.getenv("NGROK_DOMAIN")
 
     server_port: int = int(os.getenv("SERVER_PORT", "5001"))
-    should_create_webhook: bool = (
-        os.getenv("CREATE_WEBHOOK_If_NOT_EXIST", "false").lower() == "true"
-    )
-    webhook_events: Tuple[str, ...] = tuple(
-        event.strip()
-        for event in os.getenv("WORKFLOW_EVENTS_NEW_WEBHOOK", "workflow_run").split(",")
-    )
+    should_create_webhook: bool = os.getenv("CREATE_WEBHOOK_If_NOT_EXIST", "false").lower() == "true"
+    webhook_events: Tuple[str, ...] = tuple(get_webhook_events())
     # Runner-related settings
     runner_image: str = os.getenv("RUNNER_IMAGE", "gh-runner")
     docker: bool = os.getenv("DOCKER", "false").lower() == "true"

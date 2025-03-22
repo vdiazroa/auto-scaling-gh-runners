@@ -88,7 +88,7 @@ class WebhookService:
                 json=payload,
                 timeout=10,
             )
-            if response.status_code in {201, 200}:
+            if response.status_code in [201, 200]:
                 self.logger.info("✅ Webhook created")
                 return True
             self.logger.error("❌ Failed to create webhook: %s", response.text)
