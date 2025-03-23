@@ -22,7 +22,8 @@ class RunnerService:
 
         # Ensure the runner image exists before starting
         self.build_runner_image()
-        # self.generate_min_q_containers(repo)
+        for repo in config.github_repos:
+            self.generate_min_q_containers(repo)
 
     def get_runner_name_prefix(self, github_repo: str):
         """get runner name prefix"""

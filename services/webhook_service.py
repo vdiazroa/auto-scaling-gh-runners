@@ -15,7 +15,7 @@ class WebhookService:
 
     def __init__(self, config: Config):
         self.should_create_webhook = config.should_create_webhook
-        self.webhook_events = list(config.webhook_events)
+        self.webhook_events = [config.webhook_event]
         self.github_token = config.github_token
         # if using a persistent url for the tunnel server, set it here instead of "ngrok"
         self.webhook_url_partial = config.ngrok_url or ".ngrok-free.app"

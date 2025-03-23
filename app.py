@@ -28,7 +28,7 @@ if config.ngrok_authtoken:
     tunnel_service = TunnelService(config)
     Thread(
         target=tunnel_service.monitor_tunnel,
-        args=(config.github_repos)
+        args=(config.github_repos,)
     ).start()  # Monitor tunnel in the background
     get_tunnel_url = tunnel_service.get_current_tunnel_url
 
@@ -49,21 +49,21 @@ def webhook():
     if event_type == "ping":
         return jsonify({"message": "Webhook received!"}), 200
 
-    if event_type not in config.webhook_events:
+    if event_type != config.webhook_event:
         return jsonify({"message": "Webhook received! no action needed"}), 200
 
     action = payload.get("action")
-
-    print("action", action)
-
     if action == "queued":
         logger.info("🚀 New job detected! Checking for available runners...")
-        repo = ""
+        repo_name = payload.get("repository", {}).get("full_name")
+        org_name = payload.get("organization", {}).get("login")
+
+        repo = f'repos/{repo_name}' if repo_name else f'orgs/{org_name}'
         runner_service.create_runner(repo)
 
     elif action == "completed":
         logger.info("🛑 Job completed. Cleaning up runners...")
-        runner_service.remove_runner(payload["workflow_job"]["runner_name"])
+        runner_service.remove_runner(payload[event_type]["runner_name"])
 
     return jsonify({"message": "Webhook processed"}), 200
 
