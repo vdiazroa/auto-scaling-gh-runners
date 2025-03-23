@@ -17,8 +17,8 @@ class RunnerService:
         self.max_runners = config.max_runners
         self.min_runners = config.min_runners
         self.logger = logging.getLogger("RunnerService")
-        self.docker = config.docker
-        self.node = config.node
+        self.docker = str(config.docker).lower()
+        self.node = str(config.node).lower()
 
         # Ensure the runner image exists before starting
         self.build_runner_image()

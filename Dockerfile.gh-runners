@@ -27,23 +27,27 @@ RUN useradd -m -s /bin/bash runner && \
     mkdir -p /home/runner/actions-runner
 
 # ✅ Conditionally Install Docker, and Node.js in a single RUN
-RUN set -eux; \
-  [ "$DOCKER" = "true" ] && ( \
+RUN if [ "$DOCKER" = "true" ]; then \
     echo "📦 Installing Docker..." && \
     mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
+    tee /etc/apt/sources.list.d/docker.list > /dev/null && \
     apt-get update && \
     apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin && \
-    usermod -aG docker runner \
-  ) || echo "⏭ Skipping Docker installation."; \
-  [ "$NODE" = "true" ] && ( \
-    echo "📦 Installing Node.js..." && \
-    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs && \
-    npm install -g yarn pnpm \
-  ) || echo "⏭ Skipping Node.js installation."; \
-  rm -rf /var/lib/apt/lists/*
+    usermod -aG docker runner; \
+    else \
+        echo "⏭ Skipping Docker installation."; \
+    fi && \
+    if [ "$NODE" = "true" ]; then \
+        echo "📦 Installing Node.js & Package Managers..." && \
+        curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+        apt-get install -y nodejs && \
+        npm install -g yarn pnpm; \
+    else \
+        echo "⏭ Skipping Node.js installation."; \
+    fi && \
+    rm -rf /var/lib/apt/lists/*
 
 # ✅ Fix permissions
 RUN chown -R runner:runner /home/runner /usr/local && \

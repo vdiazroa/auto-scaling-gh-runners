@@ -35,7 +35,7 @@ if config.ngrok_authtoken:
 
 logger = logging.getLogger("WebhookServer")
 
-## Stat Server
+## Start Server
 app = Flask(__name__)
 
 
