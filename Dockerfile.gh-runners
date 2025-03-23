@@ -9,10 +9,6 @@ ARG DOCKER_GID=998
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DOCKER=$DOCKER
-#######
-ENV NODE=$NODE
-ENV DOCKER_GID=$DOCKER_GID
-####################################
 
 # ✅ Update package lists & install base dependencies
 RUN apt-get update && apt-get upgrade -y && \
