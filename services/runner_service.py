@@ -13,7 +13,7 @@ class RunnerService:
 
     def __init__(self, config: Config):
         self.github_token = config.github_token
-        self.docker_sock = "/var/run/docker.sock"
+        self.docker_sock = config.docker_sock
         self.runner_image = f"{config.runner_image}:latest"
         self.max_runners = config.max_runners
         self.logger = logging.getLogger("RunnerService")
@@ -37,9 +37,8 @@ class RunnerService:
 
     def get_docker_gid(self, default_gid=0):
         """Get docker group"""
-        socket_path = "/var/run/docker.sock"
         try:
-            return os.stat(socket_path).st_gid
+            return os.stat(self.docker_sock).st_gid
         except FileNotFoundError:
             print("⚠️ Docker socket not found, using default GID.")
             return default_gid
