@@ -15,25 +15,16 @@ class RunnerService:
         self.github_token = config.github_token
         self.runner_image = f"{config.runner_image}:latest"
         self.max_runners = config.max_runners
-        self.min_runners = config.min_runners
         self.logger = logging.getLogger("RunnerService")
         self.docker = str(config.docker).lower()
         self.node = str(config.node).lower()
 
         # Ensure the runner image exists before starting
         self.build_runner_image()
-        for repo in config.github_repos:
-            self.generate_min_q_containers(repo)
 
     def get_runner_name_prefix(self, github_repo: str):
         """get runner name prefix"""
         return re.sub(r"(repos/|orgs/)", "", github_repo).replace("/", "-")
-
-    def generate_min_q_containers(self, github_repo: str):
-        """Ensure minimum number of GitHub runners exist"""
-        while self.runners_quantity(github_repo) < self.min_runners:
-            self.create_runner(github_repo)
-            time.sleep(5)
 
     def image_exists(self):
         """Check if the runner Docker image exists."""

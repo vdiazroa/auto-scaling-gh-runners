@@ -112,7 +112,6 @@ GITHUB_ORG=your_org # or GITHUB_ORG=your_org1, your_org2
 # ####### GITHUB RUNNER ##########
 
 MAX_RUNNERS=5 # limit of github agents created # default is 10
-MIN_RUNNERS=1 # runnes created at startup # default is 1
 DOCKER=false # installs docker to the agent # default false
 NODE=true # installs node to the agent as well pnpm and yarn # default true
 # python3 and pip is installed by default in the gh runner image

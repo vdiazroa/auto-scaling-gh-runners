@@ -51,7 +51,6 @@ class Config:
     runner_image: str = os.getenv("RUNNER_IMAGE", "gh-runner")
     docker: bool = os.getenv("DOCKER", "false").lower() == "true"
     node: bool = os.getenv("NODE", "true").lower() == "true"
-    min_runners: int = int(os.getenv("MIN_RUNNERS", "1"))
     max_runners: int = int(os.getenv("MAX_RUNNERS", "10"))
 
 
