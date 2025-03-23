@@ -45,7 +45,7 @@ class RunnerService:
                     "--build-arg", "DOCKER_GID=$(getent group docker | cut -d: -f3)",
                     "-t",self.runner_image,"."
                 ]
-                subprocess.run(build_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                subprocess.run(build_cmd, check=True)
                 self.logger.info("✅ Runner image %s built successfully.", self.runner_image)
                 return True
             except subprocess.CalledProcessError as e:
