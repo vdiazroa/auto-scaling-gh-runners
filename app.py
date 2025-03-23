@@ -15,8 +15,10 @@ logging.basicConfig(level=logging.INFO)
 ## Start Services
 runner_service = RunnerService(config)
 
-def _tunnel_url() -> (str | None):
+
+def _tunnel_url() -> str | None:
     return
+
 
 get_tunnel_url = _tunnel_url
 
@@ -24,14 +26,16 @@ if config.ngrok_authtoken:
     from services.tunnel_service import TunnelService
 
     tunnel_service = TunnelService(config)
-    Thread(target=tunnel_service.monitor_tunnel).start()  # Monitor tunnel in the background
-
+    Thread(
+        target=tunnel_service.monitor_tunnel,
+        args=(config.github_repos,)
+    ).start()  # Monitor tunnel in the background
     get_tunnel_url = tunnel_service.get_current_tunnel_url
 
 
 logger = logging.getLogger("WebhookServer")
 
-## Stat Server
+## Start Server
 app = Flask(__name__)
 
 
@@ -45,18 +49,21 @@ def webhook():
     if event_type == "ping":
         return jsonify({"message": "Webhook received!"}), 200
 
-    if  event_type not in config.webhook_events:
+    if event_type != config.webhook_event:
         return jsonify({"message": "Webhook received! no action needed"}), 200
 
     action = payload.get("action")
-
     if action == "queued":
         logger.info("🚀 New job detected! Checking for available runners...")
-        runner_service.create_runner()
+        repo_name = payload.get("repository", {}).get("full_name")
+        org_name = payload.get("organization", {}).get("login")
+
+        repo = f'repos/{repo_name}' if repo_name else f'orgs/{org_name}'
+        runner_service.create_runner(repo)
 
     elif action == "completed":
         logger.info("🛑 Job completed. Cleaning up runners...")
-        runner_service.remove_runner(payload["workflow_job"]["runner_name"])
+        runner_service.remove_runner(payload[event_type]["runner_name"])
 
     return jsonify({"message": "Webhook processed"}), 200
 
@@ -65,12 +72,14 @@ def webhook():
 def healthcheck():
     """Health check for the server, tunnel, and runner image."""
     return (
-        jsonify({
+        jsonify(
+            {
                 "tunnel_url": get_tunnel_url(),
                 "runner_image_exists": runner_service.image_exists(),
-                "running_runners": runner_service.runners_quantity(),
-        }),
-        200
+                "running_runners_on_current_device": [ { repo: runner_service.runners_quantity(repo) } for repo in config.github_repos ]
+            }
+        ),
+        200,
     )
 
 
