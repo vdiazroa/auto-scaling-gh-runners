@@ -41,7 +41,7 @@ RUN if [ "$DOCKER" = "true" ]; then \
     tee /etc/apt/sources.list.d/docker.list > /dev/null && \
     apt-get update && \
     apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin && \
-    groupadd -g "$DOCKER_GID" docker || true && \
+    if getent group docker > /dev/null; then groupmod -g "$DOCKER_GID" docker; else groupadd -g "$DOCKER_GID" docker; fi && \
     usermod -aG docker runner; \
 else \
     echo "⏭ Skipping Docker installation."; \
