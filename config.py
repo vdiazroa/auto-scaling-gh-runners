@@ -42,7 +42,7 @@ class Config:
     github_repos: Tuple[str] = tuple(get_github_repo())
 
     ngrok_authtoken: Optional[str] = os.getenv("NGROK_AUTHTOKEN")
-    ngrok_url: Optional[str] = os.getenv("NGROK_DOMAIN")
+    ngrok_static_url: Optional[str] = os.getenv("NGROK_DOMAIN")
 
     server_port: int = int(os.getenv("SERVER_PORT", "5001"))
     should_create_webhook: bool = os.getenv("CREATE_WEBHOOK_If_NOT_EXIST", "false").lower() == "true"

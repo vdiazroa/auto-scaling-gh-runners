@@ -13,9 +13,9 @@ class TunnelService:
 
     def __init__(self, config: Config):
         self.current_tunnel_urls: dict[str:str] = {}
-        self.ngrok_url = config.ngrok_url
+        self.ngrok_static_url = config.ngrok_static_url
         ngrok.set_auth_token(config.ngrok_authtoken)
-        self.listener = ngrok.connect(addr=config.server_port, hostname=self.ngrok_url)
+        self.listener = ngrok.connect(addr=config.server_port, hostname=self.ngrok_static_url)
         self.webhook_service = WebhookService(config)
         # Configure logging
         logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -24,11 +24,6 @@ class TunnelService:
     def start_tunnel_in_repo(self, repo: str):
         """Create or update webhook with the tunnel url."""
         hook_github_api_base_url = f"https://api.github.com/{repo}"
-        if self.ngrok_url:
-            webhook_id = self.webhook_service.get_github_webhook_id(hook_github_api_base_url)
-            if not webhook_id:
-                return self.webhook_service.create_webhook(self.ngrok_url, hook_github_api_base_url)
-            return
         new_url = self.listener.public_url
         self.logger.info("🔄 tunnel URL changed: %s", new_url)
         if self.webhook_service.update_github_webhook(new_url, hook_github_api_base_url):
@@ -43,6 +38,8 @@ class TunnelService:
             if self.listener.public_url == self.current_tunnel_urls[repo]:
                 continue
             self.start_tunnel_in_repo(repo)
+        if self.ngrok_static_url:
+            return
         time.sleep(30)  # Check every 30 seconds
         self.monitor_tunnel(repos)
 

@@ -18,7 +18,7 @@ class WebhookService:
         self.webhook_events = [config.webhook_event]
         self.github_token = config.github_token
         # if using a persistent url for the tunnel server, set it here instead of "ngrok"
-        self.webhook_url_partial = config.ngrok_url or ".ngrok-free.app"
+        self.webhook_url_partial = config.ngrok_static_url or ".ngrok-free.app"
         self.logger = logging.getLogger("WebhookService")
 
     def get_github_webhook_id(self, github_api_base_url: str):
