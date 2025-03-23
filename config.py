@@ -18,20 +18,19 @@ logger = logging.getLogger("Config")
 def get_github_repo():
     """Format github_repo and github_org"""
 
-    github_repos = os.getenv("GITHUB_REPO").split(",")
-    github_orgs = os.getenv("GITHUB_ORG").split(",")
-    all_repos = []
+    github_repos = os.getenv("GITHUB_REPO")
+    github_orgs = os.getenv("GITHUB_ORG")
 
-    ## needs to be provided github_repo or github_org
     if not github_repos and not github_orgs:
         raise ValueError("Please provide either GITHUB_REPO or GITHUB_ORG")
 
-    for orgs in github_orgs:
-        all_repos.append(f"orgs/{orgs}")
-    for repo in github_repos:
-        all_repos.append(f"repos/{repo}")
+    all_repos = [
+        f"{'orgs' if is_org else 'repos'}/{item.strip()}"
+        for is_org, source in [(True, github_orgs), (False, github_repos)]
+        if source for item in source.split(",")
+    ]
 
-    return [repo.strip() for repo in all_repos]
+    return all_repos
 
 
 @dataclass

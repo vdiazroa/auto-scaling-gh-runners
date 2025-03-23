@@ -102,8 +102,8 @@ Create a `.env.local` file with:
 GITHUB_TOKEN=ghp_...your_pat...
 
 # ### needs to be at least one of the following provided
-GITHUB_REPO=your_org_or_user/your_repo # or GITHUB_REPO=your_org_or_user/your_repo1, your_org_or_user/your_repo2
-GITHUB_ORG=your_org # or GITHUB_ORG=your_org1, your_org2
+GITHUB_REPO=your_org_or_user/your_repo # or GITHUB_REPO=your_org_or_user/your_repo1,your_org_or_user/your_repo2
+GITHUB_ORG=your_org # or GITHUB_ORG=your_org1,your_org2
 
 ####################################
 # ### OPTIONAL CONFIGURATION ###
