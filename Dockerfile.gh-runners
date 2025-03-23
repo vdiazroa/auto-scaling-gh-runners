@@ -1,45 +1,53 @@
 # Use an official Ubuntu base image
 FROM ubuntu:24.04
 
-# Define build arguments (available only during `docker build`)
+# Define build arguments
 ARG DOCKER=false
 ARG NODE=false
+ARG DOCKER_GID=998
 
-# Set environment variables (available inside the container)
+# Environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DOCKER=$DOCKER
+#######
 ENV NODE=$NODE
-
-# ✅ Update package lists & install base dependencies
+ENV DOCKER_GID=$DOCKER_GID
+####################################
+# Install base packages
 RUN apt-get update && apt-get upgrade -y && \
     apt-get install -y curl git jq unzip sudo \
     libicu-dev libcurl4-openssl-dev libssl-dev software-properties-common python3-pip && \
-    ln -s /usr/bin/python3 /usr/bin/python  && \
+    ln -s /usr/bin/python3 /usr/bin/python && \
     rm -rf /var/lib/apt/lists/*
 
+# Optionally install cert tools
 RUN if [ "$DOCKER" = "true" ] || [ "$NODE" = "true" ]; then \
+    apt-get update && \
     apt-get install -y ca-certificates gnupg lsb-release && \
     rm -rf /var/lib/apt/lists/*; \
     fi
 
-# ✅ Create a non-root user for the runner
+# Create runner user and home directory
 RUN useradd -m -s /bin/bash runner && \
     mkdir -p /home/runner/actions-runner
 
-# ✅ Conditionally Install Docker, and Node.js in a single RUN
+# Docker install and group fix
 RUN if [ "$DOCKER" = "true" ]; then \
-    echo "📦 Installing Docker..." && \
-    mkdir -p /etc/apt/keyrings && \
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
-    tee /etc/apt/sources.list.d/docker.list > /dev/null && \
-    apt-get update && \
-    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin && \
-    usermod -aG docker runner; \
+        echo "📦 Installing Docker..." && \
+        mkdir -p /etc/apt/keyrings && \
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
+        tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+        apt-get update && \
+        apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin && \
+        groupadd -g "$DOCKER_GID" docker || true && \
+        usermod -aG docker runner; \
     else \
         echo "⏭ Skipping Docker installation."; \
-    fi && \
-    if [ "$NODE" = "true" ]; then \
+    fi
+
+# Optionally install Node.js
+RUN if [ "$NODE" = "true" ]; then \
         echo "📦 Installing Node.js & Package Managers..." && \
         curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
         apt-get install -y nodejs && \
@@ -49,14 +57,14 @@ RUN if [ "$DOCKER" = "true" ]; then \
     fi && \
     rm -rf /var/lib/apt/lists/*
 
-# ✅ Fix permissions
+# Permissions
 RUN chown -R runner:runner /home/runner /usr/local && \
     chmod -R 775 /usr/local/bin
 
-# ✅ Set working directory
+# Set working directory
 WORKDIR /home/runner/actions-runner
 
-# ✅ Get the latest GitHub Actions runner version & download
+# Download GitHub Actions runner
 RUN LATEST=$(curl -sI https://github.com/actions/runner/releases/latest | grep -Fi "location" | sed -E 's#.*/tag/v##' | tr -d '\r') && \
     ARCH=$(dpkg --print-architecture) && \
     if [ "$ARCH" = "amd64" ]; then ARCH_SUFFIX="x64"; \
@@ -66,12 +74,12 @@ RUN LATEST=$(curl -sI https://github.com/actions/runner/releases/latest | grep -
     tar xzf ./actions-runner-linux.tar.gz && \
     rm actions-runner-linux.tar.gz
 
-# ✅ Copy entry script & set permissions
+# Copy entrypoint
 COPY gh-runner-entrypoint.sh /home/runner/entrypoint.sh
 RUN chmod +x /home/runner/entrypoint.sh && chown runner:runner /home/runner/entrypoint.sh
 
-# ✅ Switch to the runner user
+# Switch to non-root user
 USER runner
 
-# ✅ Start the runner
+# Entrypoint
 ENTRYPOINT ["/home/runner/entrypoint.sh"]

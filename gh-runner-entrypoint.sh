@@ -1,15 +1,11 @@
 #!/bin/bash
+# set -e
 
 if [ "$DOCKER" = "true" ]; then
-    echo "🔧 Setting Docker socket permissions..."
-    SOCKET="/var/run/docker.sock"
-    if [ -S "$SOCKET" ]; then
-        DOCKER_GID=$(stat -c '%g' "$SOCKET")
-        echo "🧩 Detected Docker GID: $DOCKER_GID"
-        getent group "$DOCKER_GID" >/dev/null || groupadd -g "$DOCKER_GID" docker
-        usermod -aG docker "$(whoami)"
-    else
-        echo "❌ Docker socket not found at $SOCKET"
+    echo "🔧 Docker support enabled"
+    if [ ! -S /var/run/docker.sock ]; then
+        echo "❌ Docker socket not found!"
+        exit 1
     fi
 fi
 
@@ -19,23 +15,23 @@ TOKEN=$(curl -sX POST -H "Authorization: token $GITHUB_TOKEN" \
               -H "Accept: application/vnd.github.v3+json" \
               "$TOKEN_URL" | jq -r '.token')
 
-# Ensure the token is valid
 if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
     echo "❌ ERROR: Failed to retrieve registration token from GitHub."
     exit 1
 fi
 
 echo "✅ GitHub Runner Token acquired, registering runner at $REGISTRATION_URL"
-
-# Register the runner
 ./config.sh --url "$REGISTRATION_URL" --token "$TOKEN" --unattended --name "$(hostname)"
 
-# Start the runner
 echo "🚀 Starting GitHub Runner..."
+
+# Ensure we can cleanup on SIGTERM
+_cleanup() {
+    echo "🛑 Unregistering Runner..."
+    ./config.sh remove --token "$TOKEN"
+    exit 0
+}
+trap _cleanup SIGTERM
+
 ./run.sh &
-
-# Ensure the runner unregisters before exit
-trap 'echo "🛑 Unregistering Runner..."; ./config.sh remove --token "$TOKEN"; exit 0' SIGTERM
-
-# Keep the process running
 wait $!
