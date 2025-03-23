@@ -39,7 +39,7 @@ class RunnerService:
         if not self.image_exists():
             self.logger.info("⚙️ Runner image %s not found. Building...", self.runner_image)
             try:
-                docker_gid = grp.getgrnam("docker").gr_gid 
+                docker_gid = grp.getgrnam("docker").gr_gid
                 build_cmd = [
                     "docker","build","-f","Dockerfile.gh-runners",
                     "--build-arg",f"DOCKER={self.docker}",
