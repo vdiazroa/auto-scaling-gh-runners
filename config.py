@@ -47,6 +47,7 @@ class Config:
     should_create_webhook: bool = os.getenv("CREATE_WEBHOOK_If_NOT_EXIST", "false").lower() == "true"
     webhook_event: str = "workflow_job"
     # Runner-related settings
+    docker_sock: str = "/var/run/docker.sock"
     runner_image: str = os.getenv("RUNNER_IMAGE", "gh-runner")
     docker: bool = os.getenv("DOCKER", "false").lower() == "true"
     node: bool = os.getenv("NODE", "true").lower() == "true"
