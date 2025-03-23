@@ -1,23 +1,25 @@
 # Use an official Ubuntu base image
 FROM ubuntu:24.04
 
-# Define build arguments (available only during `docker build`)
+# Define build arguments
 ARG DOCKER=false
 ARG NODE=false
+ARG DOCKER_GID=998
 
-# Set environment variables (available inside the container)
+# Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DOCKER=$DOCKER
-ENV NODE=$NODE
 
 # ✅ Update package lists & install base dependencies
 RUN apt-get update && apt-get upgrade -y && \
     apt-get install -y curl git jq unzip sudo \
     libicu-dev libcurl4-openssl-dev libssl-dev software-properties-common python3-pip && \
-    ln -s /usr/bin/python3 /usr/bin/python  && \
+    ln -s /usr/bin/python3 /usr/bin/python && \
     rm -rf /var/lib/apt/lists/*
 
+# ✅ Optionally install cert tools
 RUN if [ "$DOCKER" = "true" ] || [ "$NODE" = "true" ]; then \
+    apt-get update && \
     apt-get install -y ca-certificates gnupg lsb-release && \
     rm -rf /var/lib/apt/lists/*; \
     fi
@@ -26,7 +28,7 @@ RUN if [ "$DOCKER" = "true" ] || [ "$NODE" = "true" ]; then \
 RUN useradd -m -s /bin/bash runner && \
     mkdir -p /home/runner/actions-runner
 
-# ✅ Conditionally Install Docker, and Node.js in a single RUN
+# ✅ Docker install and group fix
 RUN if [ "$DOCKER" = "true" ]; then \
     echo "📦 Installing Docker..." && \
     mkdir -p /etc/apt/keyrings && \
@@ -35,19 +37,22 @@ RUN if [ "$DOCKER" = "true" ]; then \
     tee /etc/apt/sources.list.d/docker.list > /dev/null && \
     apt-get update && \
     apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin && \
+    if getent group docker > /dev/null; then groupmod -g "$DOCKER_GID" docker; else groupadd -g "$DOCKER_GID" docker; fi && \
     usermod -aG docker runner; \
-    else \
-        echo "⏭ Skipping Docker installation."; \
-    fi && \
-    if [ "$NODE" = "true" ]; then \
-        echo "📦 Installing Node.js & Package Managers..." && \
-        curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-        apt-get install -y nodejs && \
-        npm install -g yarn pnpm; \
-    else \
-        echo "⏭ Skipping Node.js installation."; \
-    fi && \
-    rm -rf /var/lib/apt/lists/*
+else \
+    echo "⏭ Skipping Docker installation."; \
+fi
+
+# ✅ Optionally install Node.js
+RUN if [ "$NODE" = "true" ]; then \
+    echo "📦 Installing Node.js & Package Managers..." && \
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g yarn pnpm; \
+else \
+    echo "⏭ Skipping Node.js installation."; \
+fi && \
+rm -rf /var/lib/apt/lists/*
 
 # ✅ Fix permissions
 RUN chown -R runner:runner /home/runner /usr/local && \

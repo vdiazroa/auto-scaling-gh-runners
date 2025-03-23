@@ -1,5 +1,6 @@
 """Service that builds GitHub runner images
 and starts containers on demand"""
+import grp
 import re
 import subprocess
 import logging
@@ -38,14 +39,15 @@ class RunnerService:
         if not self.image_exists():
             self.logger.info("⚙️ Runner image %s not found. Building...", self.runner_image)
             try:
+                docker_gid = grp.getgrnam("docker").gr_gid
                 build_cmd = [
                     "docker","build","-f","Dockerfile.gh-runners",
                     "--build-arg",f"DOCKER={self.docker}",
                     "--build-arg",f"NODE={self.node}",
-                    "--build-arg", "DOCKER_GID=$(getent group docker | cut -d: -f3)",
+                    "--build-arg", f"DOCKER_GID={docker_gid}",
                     "-t",self.runner_image,"."
                 ]
-                subprocess.run(build_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                subprocess.run(build_cmd, check=True)
                 self.logger.info("✅ Runner image %s built successfully.", self.runner_image)
                 return True
             except subprocess.CalledProcessError as e:
