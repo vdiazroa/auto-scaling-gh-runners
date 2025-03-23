@@ -37,7 +37,17 @@ RUN if [ "$DOCKER" = "true" ]; then \
     tee /etc/apt/sources.list.d/docker.list > /dev/null && \
     apt-get update && \
     apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin && \
-    if getent group docker > /dev/null; then groupmod -g "$DOCKER_GID" docker; else groupadd -g "$DOCKER_GID" docker; fi && \
+    \
+    EXISTING_GID=$(getent group docker | cut -d: -f3 2>/dev/null || echo "") && \
+    if [ "$EXISTING_GID" = "$DOCKER_GID" ]; then \
+        echo "✅ Docker group already has GID $DOCKER_GID"; \
+    elif [ -z "$EXISTING_GID" ]; then \
+        echo "➕ Creating docker group with GID $DOCKER_GID"; \
+        groupadd -g "$DOCKER_GID" docker; \
+    else \
+        echo "⚠️ Docker group exists with different GID ($EXISTING_GID), skipping groupmod"; \
+    fi && \
+    \
     usermod -aG docker runner; \
 else \
     echo "⏭ Skipping Docker installation."; \

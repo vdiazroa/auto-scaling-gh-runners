@@ -1,6 +1,6 @@
 """Service that builds GitHub runner images
 and starts containers on demand"""
-import grp
+import os
 import re
 import subprocess
 import logging
@@ -13,6 +13,7 @@ class RunnerService:
 
     def __init__(self, config: Config):
         self.github_token = config.github_token
+        self.docker_sock = "/var/run/docker.sock"
         self.runner_image = f"{config.runner_image}:latest"
         self.max_runners = config.max_runners
         self.logger = logging.getLogger("RunnerService")
@@ -34,12 +35,22 @@ class RunnerService:
         except subprocess.CalledProcessError:
             return False
 
+    def get_docker_gid(self, default_gid=0):
+        """Get docker group"""
+        socket_path = "/var/run/docker.sock"
+        try:
+            return os.stat(socket_path).st_gid
+        except FileNotFoundError:
+            print("⚠️ Docker socket not found, using default GID.")
+            return default_gid
+
     def build_runner_image(self):
         """Build the GitHub Actions runner image if it does not exist."""
         if not self.image_exists():
             self.logger.info("⚙️ Runner image %s not found. Building...", self.runner_image)
             try:
-                docker_gid = grp.getgrnam("docker").gr_gid
+                docker_gid = self.get_docker_gid()
+                print("Docker GID is:", docker_gid)
                 build_cmd = [
                     "docker","build","-f","Dockerfile.gh-runners",
                     "--build-arg",f"DOCKER={self.docker}",
@@ -66,7 +77,7 @@ class RunnerService:
         try:
             # Run the container and get its ID securely
             runner_cmd = [
-                "docker","run","-d","--privileged","-v","/var/run/docker.sock:/var/run/docker.sock",
+                "docker","run","-d","--privileged","-v",f"{self.docker_sock}:{self.docker_sock}",
                 "-e",f"GITHUB_TOKEN={self.github_token}","-e",f"GITHUB_REPO={github_repo}",
                 "-e",f"DOCKER={self.docker}",self.runner_image
             ]
