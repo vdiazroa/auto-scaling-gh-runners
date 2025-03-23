@@ -3,7 +3,6 @@ and starts containers on demand"""
 import re
 import subprocess
 import logging
-import time
 
 from config import Config
 
