@@ -56,7 +56,7 @@ class RunnerService:
     def create_runner(self, github_repo: str):
         """Create a new GitHub Actions runner container."""
         runner_name_prefix = self.get_runner_name_prefix(github_repo)
-        
+
         if self.runners_quantity(runner_name_prefix) >= self.max_runners:
             self.logger.info("🚀 Max runners reached. No new runner created.")
             return False

@@ -11,8 +11,7 @@ COPY ./requirements.txt app.py config.py /app/
 COPY ./services/ /app/services/
 
 # ✅ Create a virtual environment & install dependencies
-RUN python3 -m venv /app/venv && \
-    . /app/venv/bin/activate && \
+RUN python3 -m venv /app/venv && . /app/venv/bin/activate && \
     pip install --no-cache-dir -r requirements.txt
 
 # Expose Flask (optional, useful for debugging)
