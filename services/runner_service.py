@@ -14,6 +14,7 @@ class RunnerService:
     def __init__(self, config: Config):
         self.github_token = config.github_token
         self.docker_sock = config.docker_sock
+        # TODO: use version from current image instead of latest
         self.runner_image = f"{config.runner_image}:latest"
         self.max_runners = config.max_runners
         self.logger = logging.getLogger("RunnerService")
@@ -49,7 +50,6 @@ class RunnerService:
             self.logger.info("⚙️ Runner image %s not found. Building...", self.runner_image)
             try:
                 docker_gid = self.get_docker_gid()
-                print("Docker GID is:", docker_gid)
                 build_cmd = [
                     "docker","build","-f","Dockerfile.gh-runners",
                     "--build-arg",f"DOCKER={self.docker}",
