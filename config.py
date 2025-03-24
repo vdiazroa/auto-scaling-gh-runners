@@ -52,6 +52,7 @@ class Config:
     docker: bool = os.getenv("DOCKER", "false").lower() == "true"
     node: bool = os.getenv("NODE", "true").lower() == "true"
     max_runners: int = int(os.getenv("MAX_RUNNERS", "10"))
+    debug_runner: bool = os.getenv("DEBUG_RUNNER", "false").lower() == "true"
 
 
 config = Config()

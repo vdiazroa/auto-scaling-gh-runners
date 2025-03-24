@@ -14,7 +14,8 @@ logging.basicConfig(level=logging.INFO)
 
 ## Start Services
 runner_service = RunnerService(config)
-
+if config.debug_runner:
+    runner_service.create_runner(config.github_repos[0])
 
 def _tunnel_url() -> str | None:
     return

@@ -1,6 +1,7 @@
 """Service that builds GitHub runner images
 and starts containers on demand"""
 import os
+import platform
 import re
 import subprocess
 import logging
@@ -14,11 +15,12 @@ class RunnerService:
     def __init__(self, config: Config):
         self.github_token = config.github_token
         self.docker_sock = config.docker_sock
-        self.runner_image = f"{config.runner_image}:{version}"
+        self.runner_image = f"{config.runner_image}:{version}{'_docker' if config.docker else ''}{'_node' if config.node else ''}"
         self.max_runners = config.max_runners
         self.logger = logging.getLogger("RunnerService")
         self.docker = str(config.docker).lower()
         self.node = str(config.node).lower()
+        self.debug_runner = config.debug_runner
 
         # Ensure the runner image exists before starting
         self.build_runner_image()
@@ -31,38 +33,48 @@ class RunnerService:
         """Check if the runner Docker image exists."""
         try:
             output = subprocess.check_output(["docker", "images", "-q", self.runner_image]).decode().strip()
-            return bool(output)
+            does_image_exists = bool(output)
+            if self.debug_runner:
+                self.logger.inf(f'Image: {self.runner_image} does {"" if does_image_exists else "not "}exist')
+            return does_image_exists
         except subprocess.CalledProcessError:
             return False
 
-    def get_docker_gid(self, default_gid=0):
+    def get_docker_gid(self, default_gid=999):
         """Get docker group"""
+        if platform.system() == "Darwin":  # macOS
+            print("🧩 macOS detected: using GID 0 for Docker socket access")
+            return 0
         try:
             return os.stat(self.docker_sock).st_gid
         except FileNotFoundError:
-            print("⚠️ Docker socket not found, using default GID.")
+            print("⚠️ Docker socket not found, using fallback GID.")
             return default_gid
 
     def build_runner_image(self):
         """Build the GitHub Actions runner image if it does not exist."""
-        if not self.image_exists():
-            self.logger.info("⚙️ Runner image %s not found. Building...", self.runner_image)
-            try:
-                docker_gid = self.get_docker_gid()
-                build_cmd = [
-                    "docker","build","-f","Dockerfile.gh-runners",
-                    "--build-arg",f"DOCKER={self.docker}",
-                    "--build-arg",f"NODE={self.node}",
-                    "--build-arg", f"DOCKER_GID={docker_gid}",
-                    "-t",self.runner_image,"."
-                ]
-                subprocess.run(build_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                self.logger.info("✅ Runner image %s built successfully.", self.runner_image)
-                return True
-            except subprocess.CalledProcessError as e:
-                self.logger.error("❌ Error building runner image: %s", e.stderr.decode())
-                return False
-        return True
+        if self.image_exists():
+            return
+        self.logger.info("⚙️ Runner image %s not found. Building...", self.runner_image)
+        try:
+            docker_gid = self.get_docker_gid()
+            build_cmd = [
+                "docker","build","-f","Dockerfile.gh-runners",
+                "--build-arg",f"DOCKER={self.docker}",
+                "--build-arg",f"NODE={self.node}",
+                "--build-arg", f"DOCKER_GID={docker_gid}",
+                "-t",self.runner_image,"."
+            ]
+            subprocess.run(
+                build_cmd,
+                check=True,
+                stdout=None if self.debug_runner else subprocess.PIPE,
+                stderr=None if self.debug_runner else subprocess.PIPE
+                )
+            self.logger.info("✅ Runner image %s built successfully.", self.runner_image)
+        except subprocess.CalledProcessError as e:
+            self.logger.error("❌ Error building runner image: %s", e.stderr.decode())
+        return
 
     def create_runner(self, github_repo: str):
         """Create a new GitHub Actions runner container."""
@@ -76,8 +88,7 @@ class RunnerService:
             # Run the container and get its ID securely
             runner_cmd = [
                 "docker","run","-d","--privileged","-v",f"{self.docker_sock}:{self.docker_sock}",
-                "-e",f"GITHUB_TOKEN={self.github_token}","-e",f"GITHUB_REPO={github_repo}",
-                "-e",f"DOCKER={self.docker}",self.runner_image
+                "-e",f"GITHUB_TOKEN={self.github_token}","-e",f"GITHUB_REPO={github_repo}",self.runner_image
             ]
             container_id = subprocess.check_output(runner_cmd).decode().strip()
 
