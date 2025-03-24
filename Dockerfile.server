@@ -7,7 +7,7 @@ RUN apk add --no-cache python3 py3-pip docker-cli
 WORKDIR /app
 
 # Copy necessary files
-COPY ./requirements.txt app.py config.py /app/
+COPY ./requirements.txt app.py config.py __init__.py /app/
 COPY ./services/ /app/services/
 
 # ✅ Create a virtual environment & install dependencies
