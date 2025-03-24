@@ -5,8 +5,8 @@ import re
 import subprocess
 import logging
 
+from __init__ import __version__ as version
 from config import Config
-
 
 class RunnerService:
     """Handles GitHub self-hosted runner management."""
@@ -14,8 +14,7 @@ class RunnerService:
     def __init__(self, config: Config):
         self.github_token = config.github_token
         self.docker_sock = config.docker_sock
-        # TODO: use version from current image instead of latest
-        self.runner_image = f"{config.runner_image}:latest"
+        self.runner_image = f"{config.runner_image}:{version}"
         self.max_runners = config.max_runners
         self.logger = logging.getLogger("RunnerService")
         self.docker = str(config.docker).lower()
@@ -106,6 +105,7 @@ class RunnerService:
     def runners_quantity(self, github_repo: str):
         """List running GitHub runner containers."""
         runner_name_prefix = self.get_runner_name_prefix(github_repo)
+        # TODO: get quantity from the repo api, and maybe save them in a var to be available for the healtcheck api
         try:
             output = subprocess.check_output(
                 ["docker", "ps", "--filter", f"name={runner_name_prefix}*", "--format", "{{.Names}}"]
