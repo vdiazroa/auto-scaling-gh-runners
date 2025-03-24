@@ -14,7 +14,7 @@ class RunnerService:
     def __init__(self, config: Config):
         self.github_token = config.github_token
         self.docker_sock = config.docker_sock
-        self.runner_image = f"{config.runner_image}{'_docker' if config.docker else ''}{'_node' if config.node else ''}:{version}"
+        self.runner_image = f"{config.runner_image}:{version}{'_docker' if config.docker else ''}{'_node' if config.node else ''}"
         self.max_runners = config.max_runners
         self.logger = logging.getLogger("RunnerService")
         self.docker = str(config.docker).lower()
