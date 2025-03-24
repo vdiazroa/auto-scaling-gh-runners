@@ -5,8 +5,8 @@ import re
 import subprocess
 import logging
 
+from __init__ import __version__ as version
 from config import Config
-
 
 class RunnerService:
     """Handles GitHub self-hosted runner management."""
@@ -14,8 +14,7 @@ class RunnerService:
     def __init__(self, config: Config):
         self.github_token = config.github_token
         self.docker_sock = config.docker_sock
-        # TODO: use version from current image instead of latest
-        self.runner_image = f"{config.runner_image}:latest"
+        self.runner_image = f"{config.runner_image}:{version}"
         self.max_runners = config.max_runners
         self.logger = logging.getLogger("RunnerService")
         self.docker = str(config.docker).lower()
