@@ -4,7 +4,7 @@ FROM ubuntu:24.04
 # Define build arguments
 ARG DOCKER=false
 ARG NODE=false
-ARG DOCKER_GID=998
+ARG DOCKER_GID=999
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
