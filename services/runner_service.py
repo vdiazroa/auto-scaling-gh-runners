@@ -105,6 +105,7 @@ class RunnerService:
     def runners_quantity(self, github_repo: str):
         """List running GitHub runner containers."""
         runner_name_prefix = self.get_runner_name_prefix(github_repo)
+        # TODO: get quantity from the repo api, and maybe save them in a var to be available for the healtcheck api
         try:
             output = subprocess.check_output(
                 ["docker", "ps", "--filter", f"name={runner_name_prefix}*", "--format", "{{.Names}}"]
