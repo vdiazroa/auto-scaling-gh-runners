@@ -1,6 +1,7 @@
 """Service that builds GitHub runner images
 and starts containers on demand"""
 import os
+import platform
 import re
 import subprocess
 import logging
@@ -41,10 +42,13 @@ class RunnerService:
 
     def get_docker_gid(self, default_gid=999):
         """Get docker group"""
+        if platform.system() == "Darwin":  # macOS
+            print("🧩 macOS detected: using GID 0 for Docker socket access")
+            return 0
         try:
             return os.stat(self.docker_sock).st_gid
         except FileNotFoundError:
-            print("⚠️ Docker socket not found, using default GID.")
+            print("⚠️ Docker socket not found, using fallback GID.")
             return default_gid
 
     def build_runner_image(self):

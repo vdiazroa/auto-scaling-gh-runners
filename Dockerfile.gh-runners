@@ -4,7 +4,7 @@ FROM ubuntu:24.04
 # Define build arguments
 ARG DOCKER=false
 ARG NODE=false
-ARG DOCKER_GID=999
+ARG DOCKER_GID
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
@@ -39,7 +39,10 @@ RUN if [ "$DOCKER" = "true" ]; then \
     apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin && \
     \
     EXISTING_GID=$(getent group docker | cut -d: -f3 2>/dev/null || echo "") && \
-    if [ -z "$EXISTING_GID" ]; then \
+    if [ "$DOCKER_GID" -eq 0 ]; then \
+        echo "⚠️ Docker socket GID is 0 (root), adding user to 'root' group"; \
+        usermod -aG root runner; \
+    elif [ -z "$EXISTING_GID" ]; then \
         echo "➕ Creating docker group with GID $DOCKER_GID"; \
         groupadd -g "$DOCKER_GID" docker; \
     elif [ "$EXISTING_GID" != "$DOCKER_GID" ]; then \
