@@ -35,21 +35,20 @@ class RunnerService:
             output = subprocess.check_output(["docker", "images", "-q", self.runner_image]).decode().strip()
             does_image_exists = bool(output)
             if self.debug_runner:
-                self.logger.inf(f'Image: {self.runner_image} does {"" if does_image_exists else "not "}exist')
+                self.logger.info('Image: %s does %sexist', self.runner_image, "" if does_image_exists else "not ")
             return does_image_exists
         except subprocess.CalledProcessError:
             return False
 
-    def get_docker_gid(self, default_gid=999):
+    def get_docker_gid(self, default_gid=1000):
         """Get docker group"""
-        if platform.system() == "Darwin":  # macOS
-            print("🧩 macOS detected: using GID 0 for Docker socket access")
-            return 0
         try:
-            return os.stat(self.docker_sock).st_gid
-        except FileNotFoundError:
-            print("⚠️ Docker socket not found, using fallback GID.")
-            return default_gid
+            return subprocess.check_output([
+                "stat", "-f" if platform.system() == "Darwin" else "-c", "%g", self.docker_sock
+            ]).decode().strip()
+        except subprocess.CalledProcessError:
+            print("⚠️ Could not get Docker GID. Default value")
+            return str(default_gid)
 
     def build_runner_image(self):
         """Build the GitHub Actions runner image if it does not exist."""
@@ -57,12 +56,11 @@ class RunnerService:
             return
         self.logger.info("⚙️ Runner image %s not found. Building...", self.runner_image)
         try:
-            docker_gid = self.get_docker_gid()
             build_cmd = [
                 "docker","build","-f","Dockerfile.gh-runners",
                 "--build-arg",f"DOCKER={self.docker}",
                 "--build-arg",f"NODE={self.node}",
-                "--build-arg", f"DOCKER_GID={docker_gid}",
+                "--build-arg", f"DOCKER_GID={self.get_docker_gid()}",
                 "-t",self.runner_image,"."
             ]
             subprocess.run(
