@@ -14,8 +14,6 @@ logging.basicConfig(level=logging.INFO)
 
 ## Start Services
 runner_service = RunnerService(config)
-if config.debug_runner:
-    runner_service.create_runner(config.github_repos[0])
 
 def _tunnel_url() -> str | None:
     return
@@ -43,30 +41,34 @@ app = Flask(__name__)
 @app.route("/webhook", methods=["POST"])
 def webhook():
     """Handles incoming GitHub Webhook events."""
-    payload = request.json
-    event_type = request.headers.get("X-GitHub-Event", "unknown")
-    logger.info("📩 Received GitHub Webhook: %s", event_type)
+    try:
+        payload = request.json
+        event_type = request.headers.get("X-GitHub-Event", "unknown")
+        logger.info("📩 Received GitHub Webhook: %s", event_type)
 
-    if event_type == "ping":
-        return jsonify({"message": "Webhook received!"}), 200
+        if event_type == "ping":
+            return jsonify({"message": "Webhook received!"}), 200
 
-    if event_type != config.webhook_event:
-        return jsonify({"message": "Webhook received! no action needed"}), 200
+        if event_type != config.webhook_event:
+            return jsonify({"message": "Webhook received! no action needed"}), 200
 
-    action = payload.get("action")
-    if action == "queued":
-        logger.info("🚀 New job detected! Checking for available runners...")
-        repo_name = payload.get("repository", {}).get("full_name")
-        org_name = payload.get("organization", {}).get("login")
+        action = payload.get("action")
+        if action == "queued":
+            logger.info("🚀 New job detected! Checking for available runners...")
+            repo_name = payload.get("repository", {}).get("full_name")
+            org_name = payload.get("organization", {}).get("login")
 
-        repo = f'repos/{repo_name}' if repo_name else f'orgs/{org_name}'
-        runner_service.create_runner(repo)
+            repo = f'repos/{repo_name}' if repo_name else f'orgs/{org_name}'
+            runner_service.create_runner(repo)
 
-    elif action == "completed":
-        logger.info("🛑 Job completed. Cleaning up runners...")
-        runner_service.remove_runner(payload[event_type]["runner_name"])
+        elif action == "completed":
+            logger.info("🛑 Job completed. Cleaning up runners...")
+            runner_service.remove_runner(payload[event_type]["runner_name"])
 
-    return jsonify({"message": "Webhook processed"}), 200
+        return jsonify({"message": "Webhook processed"}), 200
+    except Exception as e:
+        logger.error("Unexpected error: %s", e)
+        return jsonify({"message": "Unexpected error"}), 400
 
 
 @app.route("/healthcheck", methods=["GET"])

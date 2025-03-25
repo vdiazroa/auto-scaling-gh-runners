@@ -1,6 +1,5 @@
 """Service that builds GitHub runner images
 and starts containers on demand"""
-import os
 import platform
 import re
 import subprocess
@@ -24,6 +23,8 @@ class RunnerService:
 
         # Ensure the runner image exists before starting
         self.build_runner_image()
+        if config.debug_runner:
+            self.create_runner(config.github_repos[0])
 
     def get_runner_name_prefix(self, github_repo: str):
         """get runner name prefix"""

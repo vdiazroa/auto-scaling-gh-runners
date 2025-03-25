@@ -17,7 +17,6 @@ logger = logging.getLogger("Config")
 
 def get_github_repo():
     """Format github_repo and github_org"""
-
     github_repos = os.getenv("GITHUB_REPO")
     github_orgs = os.getenv("GITHUB_ORG")
 
@@ -36,7 +35,6 @@ def get_github_repo():
 @dataclass
 class Config:
     """Configuration class to store environment variables for the webhook server and runner."""
-
     github_token: Optional[str] = os.getenv("GITHUB_TOKEN")
     github_repos: Tuple[str] = tuple(get_github_repo())
 
