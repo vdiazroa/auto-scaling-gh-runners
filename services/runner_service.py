@@ -17,8 +17,8 @@ class RunnerService:
         self.runner_image = f"{config.runner_image}:{version}{'_docker' if config.docker else ''}{'_node' if config.node else ''}"
         self.max_runners = config.max_runners
         self.logger = logging.getLogger("RunnerService")
-        self.docker = str(config.docker).lower()
-        self.node = str(config.node).lower()
+        self.docker = config.docker
+        self.node = config.node
         self.debug_runner = config.debug_runner
 
         # Ensure the runner image exists before starting
@@ -59,8 +59,8 @@ class RunnerService:
         try:
             build_cmd = [
                 "docker","build","-f","Dockerfile.gh-runners",
-                "--build-arg",f"DOCKER={self.docker}",
-                "--build-arg",f"NODE={self.node}",
+                "--build-arg",f"DOCKER={str(self.docker).lower()}",
+                "--build-arg",f"NODE={str(self.node).lower()}",
                 "--build-arg", f"DOCKER_GID={self.get_docker_gid()}",
                 "-t",self.runner_image,"."
             ]
@@ -84,11 +84,18 @@ class RunnerService:
             return False
 
         try:
-            # Run the container and get its ID securely
-            runner_cmd = [
-                "docker","run","-d","--privileged","-v",f"{self.docker_sock}:{self.docker_sock}",
-                "-e",f"GITHUB_TOKEN={self.github_token}","-e",f"GITHUB_REPO={github_repo}",self.runner_image
+            # ✅ Add Docker-specific options only if Docker is enabled
+            runner_cmd_docker_options = [
+                item
+                for item in ["--privileged", "-v", f"{self.docker_sock}:{self.docker_sock}"]
+                if self.docker
             ]
+            runner_cmd = [
+                "docker", "run","-d",
+                *runner_cmd_docker_options,
+                "-e", f"GITHUB_TOKEN={self.github_token}","-e", f"GITHUB_REPO={github_repo}",self.runner_image
+            ]
+            # Run the container and get its ID securely
             container_id = subprocess.check_output(runner_cmd).decode().strip()
 
             # Rename the container using the generated ID
