@@ -66,6 +66,8 @@ def webhook():
             runner_service.remove_runner(payload[event_type]["runner_name"])
 
         return jsonify({"message": "Webhook processed"}), 200
+    # catching general Exception to assure that the app does not crash by accessing wrong keys, if someone else tries to reach the endpoint with wrong data
+    # TODO: get better Error handling or use a github webhook secret 
     except Exception as e:
         logger.error("Unexpected error: %s", e)
         return jsonify({"message": "Unexpected error"}), 400
